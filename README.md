@@ -1,6 +1,6 @@
 # Incident
 
-**TODO: Add description**
+Event Sourcing and CQRS in Elixir.
 
 ## Installation
 
