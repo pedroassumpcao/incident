@@ -74,31 +74,51 @@ defmodule Incident.Event.Store do
 end
 
 # Aggregate State
-defmodule Incident.Aggregate.State do
-  defstruct [:aggregate_id, :account_number, :balance, :version, :updated_at]
+defmodule Incident.AggregateState do
 
-  alias Incident.Aggregate
-  alias Incident.Event.Store
+  defmacro __using__(opts) do
+    aggregate = Keyword.get(opts, :aggregate)
+    initial_state = Keyword.get(opts, :initial_state)
 
-  def get(aggregate_id) do
-    aggregate_id
-    |> Store.get()
-    |> Enum.reduce(%__MODULE__{}, fn event, state ->
-      Aggregate.apply(event, state)
-    end)
+    quote do
+      import Incident.AggregateState
+
+      alias Incident.Event.Store
+
+      def get(aggregate_id) do
+        aggregate_id
+        |> Store.get()
+        |> Enum.reduce(unquote(initial_state), fn event, state ->
+          unquote(aggregate).apply(event, state)
+        end)
+      end
+    end
   end
+end
+
+defmodule Incident.BankAccountState do
+  use Incident.AggregateState, aggregate: Incident.BankAccount, initial_state: %{aggregate_id: nil, account_number: nil, balance: nil, version: nil, updated_at: nil}
 end
 
 # Aggregate
 defmodule Incident.Aggregate do
+  @callback execute(struct) :: :ok | {:error, atom}
+  @callback apply(struct, map) :: map
+end
 
-  alias Incident.Aggregate.State
+
+defmodule Incident.BankAccount do
+
+  @behaviour Incident.Aggregate
+
+  alias Incident.BankAccountState
   alias Incident.Command.{DepositMoney, OpenAccount}
   alias Incident.Event.{AccountOpened, MoneyDeposited, Store}
 
+  @impl true
   def execute(%OpenAccount{account_number: account_number}) do
-    case State.get(account_number) do
-      %State{account_number: nil} ->
+    case BankAccountState.get(account_number) do
+      %{account_number: nil} ->
         %AccountOpened{
           aggregate_id: account_number,
           account_number: account_number,
@@ -110,9 +130,10 @@ defmodule Incident.Aggregate do
     end
   end
 
+  @impl true
   def execute(%DepositMoney{aggregate_id: aggregate_id, amount: amount}) do
-    case State.get(aggregate_id) do
-      %State{aggregate_id: aggregate_id} = state when not is_nil(aggregate_id) ->
+    case BankAccountState.get(aggregate_id) do
+      %{aggregate_id: aggregate_id} = state when not is_nil(aggregate_id) ->
         %MoneyDeposited{
           aggregate_id: aggregate_id,
           amount: amount,
@@ -124,15 +145,17 @@ defmodule Incident.Aggregate do
     end
   end
 
-  @spec apply(struct, struct) :: struct
+  @impl true
   def apply(%{event_type: "AccountOpened"} = event, state) do
     %{state | aggregate_id: event.aggregate_id, account_number: event.event_data.account_number, balance: 0, version: event.version, updated_at: event.event_date}
   end
 
+  @impl true
   def apply(%{event_type: "MoneyDeposited"} = event, state) do
     %{state | balance: state.balance + event.event_data.amount, version: event.version, updated_at: event.event_date}
   end
 
+  @impl true
   def apply(_, state) do
     state
   end
