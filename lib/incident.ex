@@ -16,6 +16,10 @@ defmodule Incident.Event.MoneyDeposited do
   defstruct [:aggregate_id, :amount, :version]
 end
 
+defmodule Incident.Event.PersistedEvent do
+  defstruct [:event_id, :aggregate_id, :event_type, :version, :event_date, :event_data]
+end
+
 # Event Store Adapter
 defmodule Incident.Event.Store.Adapter do
   @callback get(String.t()) :: list
@@ -27,6 +31,8 @@ defmodule Incident.Event.Store.InMemoryAdapter do
   @behaviour Incident.Event.Store.Adapter
 
   use Agent
+
+  alias Incident.Event.PersistedEvent
 
   def start_link(initial_value) do
     Agent.start_link(fn -> initial_value end, name: __MODULE__)
@@ -42,7 +48,8 @@ defmodule Incident.Event.Store.InMemoryAdapter do
 
   @impl true
   def append(event) do
-    persisted_event = %{
+    persisted_event = %PersistedEvent{
+      event_id: :rand.uniform(100000) |> Integer.to_string(),
       aggregate_id: event.aggregate_id,
       event_type: event.__struct__ |> Module.split() |> List.last(),
       version: event.version,
