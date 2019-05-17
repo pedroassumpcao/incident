@@ -228,7 +228,7 @@ defmodule Incident.Projection.Store do
   end
 
   def all(projection_name) do
-    apply(adapter(), :get, [projection_name])
+    apply(adapter(), :all, [projection_name])
   end
 
   defp adapter do
