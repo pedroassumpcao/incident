@@ -27,7 +27,6 @@ defmodule Incident.Event.Store.Adapter do
 end
 
 defmodule Incident.Event.Store.InMemoryAdapter do
-
   @behaviour Incident.Event.Store.Adapter
 
   use Agent
@@ -41,7 +40,7 @@ defmodule Incident.Event.Store.InMemoryAdapter do
   @impl true
   def get(aggregate_id) do
     __MODULE__
-    |> Agent.get(&(&1))
+    |> Agent.get(& &1)
     |> Enum.filter(&(&1.aggregate_id == aggregate_id))
     |> Enum.reverse()
   end
@@ -49,7 +48,7 @@ defmodule Incident.Event.Store.InMemoryAdapter do
   @impl true
   def append(event) do
     persisted_event = %PersistedEvent{
-      event_id: :rand.uniform(100000) |> Integer.to_string(),
+      event_id: :rand.uniform(100_000) |> Integer.to_string(),
       aggregate_id: event.aggregate_id,
       event_type: event.__struct__ |> Module.split() |> List.last(),
       version: event.version,
@@ -63,7 +62,6 @@ end
 
 # Event Store
 defmodule Incident.Event.Store do
-
   def get(aggregate_id), do: adapter().get(aggregate_id)
 
   def append(event), do: adapter().append(event)
@@ -75,7 +73,6 @@ end
 
 # Aggregate State
 defmodule Incident.AggregateState do
-
   defmacro __using__(opts) do
     aggregate = Keyword.get(opts, :aggregate)
     initial_state = Keyword.get(opts, :initial_state)
@@ -97,7 +94,15 @@ defmodule Incident.AggregateState do
 end
 
 defmodule Incident.BankAccountState do
-  use Incident.AggregateState, aggregate: Incident.BankAccount, initial_state: %{aggregate_id: nil, account_number: nil, balance: nil, version: nil, updated_at: nil}
+  use Incident.AggregateState,
+    aggregate: Incident.BankAccount,
+    initial_state: %{
+      aggregate_id: nil,
+      account_number: nil,
+      balance: nil,
+      version: nil,
+      updated_at: nil
+    }
 end
 
 # Aggregate
@@ -106,9 +111,7 @@ defmodule Incident.Aggregate do
   @callback apply(struct, map) :: map
 end
 
-
 defmodule Incident.BankAccount do
-
   @behaviour Incident.Aggregate
 
   alias Incident.BankAccountState
@@ -126,7 +129,8 @@ defmodule Incident.BankAccount do
         }
         |> Store.append()
 
-      _ -> {:error, :account_already_opened}
+      _ ->
+        {:error, :account_already_opened}
     end
   end
 
@@ -141,22 +145,93 @@ defmodule Incident.BankAccount do
         }
         |> Store.append()
 
-      _ -> {:error, :account_not_found}
+      _ ->
+        {:error, :account_not_found}
     end
   end
 
   @impl true
   def apply(%{event_type: "AccountOpened"} = event, state) do
-    %{state | aggregate_id: event.aggregate_id, account_number: event.event_data.account_number, balance: 0, version: event.version, updated_at: event.event_date}
+    %{
+      state
+      | aggregate_id: event.aggregate_id,
+        account_number: event.event_data.account_number,
+        balance: 0,
+        version: event.version,
+        updated_at: event.event_date
+    }
   end
 
   @impl true
   def apply(%{event_type: "MoneyDeposited"} = event, state) do
-    %{state | balance: state.balance + event.event_data.amount, version: event.version, updated_at: event.event_date}
+    %{
+      state
+      | balance: state.balance + event.event_data.amount,
+        version: event.version,
+        updated_at: event.event_date
+    }
   end
 
   @impl true
   def apply(_, state) do
     state
+  end
+end
+
+# Projection Store Adapter
+defmodule Incident.Projection.Store.Adapter do
+  @callback project(:atom, map) :: map
+  @callback all(:atom) :: list
+end
+
+defmodule Incident.Projection.Store.InMemoryAdapter do
+  @behaviour Incident.Projection.Store.Adapter
+
+  use Agent
+
+  def start_link(initial_state) do
+    Agent.start_link(fn -> initial_state end, name: __MODULE__)
+  end
+
+  @impl true
+  def project(projection_name, %{aggregate_id: aggregate_id} = data) do
+    Agent.update(__MODULE__, fn state ->
+      update_in(state, [projection_name], fn projections ->
+        case Enum.find(projections, &(&1.aggregate_id == aggregate_id)) do
+          nil ->
+            [data] ++ projections
+
+          _ ->
+            Enum.reduce(projections, [], fn record, acc ->
+              case record.aggregate_id == aggregate_id do
+                true -> [Map.merge(record, data)] ++ acc
+                false -> [record] ++ acc
+              end
+            end)
+        end
+      end)
+    end)
+  end
+
+  @impl true
+  def all(projection_name) do
+    Agent.get(__MODULE__, fn state ->
+      Map.get(state, projection_name)
+    end)
+  end
+end
+
+# Projection Store
+defmodule Incident.Projection.Store do
+  def project(projection_name, data) do
+    apply(adapter(), :project, [projection_name, data])
+  end
+
+  def all(projection_name) do
+    apply(adapter(), :get, [projection_name])
+  end
+
+  defp adapter do
+    Incident.Projection.Store.InMemoryAdapter
   end
 end
