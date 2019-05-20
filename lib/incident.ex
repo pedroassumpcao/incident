@@ -27,13 +27,13 @@ defmodule Incident.Projection.BankAccount do
 end
 
 # Projection Store Adapter
-defmodule Incident.Projection.Store.Adapter do
+defmodule Incident.ProjectionStore.Adapter do
   @callback project(:atom, map) :: map
   @callback all(:atom) :: list
 end
 
-defmodule Incident.Projection.Store.InMemoryAdapter do
-  @behaviour Incident.Projection.Store.Adapter
+defmodule Incident.ProjectionStore.InMemoryAdapter do
+  @behaviour Incident.ProjectionStore.Adapter
 
   use Agent
 
@@ -70,7 +70,7 @@ defmodule Incident.Projection.Store.InMemoryAdapter do
 end
 
 # Projection Store
-defmodule Incident.Projection.Store do
+defmodule Incident.ProjectionStore do
   def project(projection_name, data) do
     apply(adapter(), :project, [projection_name, data])
   end
@@ -80,14 +80,14 @@ defmodule Incident.Projection.Store do
   end
 
   defp adapter do
-    Incident.Projection.Store.InMemoryAdapter
+    Incident.ProjectionStore.InMemoryAdapter
   end
 end
 
 # Event Handler
 defmodule Incident.EventHandler do
   alias Incident.Event.PersistedEvent
-  alias Incident.Projection.Store
+  alias Incident.ProjectionStore
   alias Incident.Projection.BankAccount
   alias Incident.BankAccount, as: Aggregate
 
@@ -101,7 +101,7 @@ defmodule Incident.EventHandler do
       event_id: event.event_id,
       event_date: event.event_date
     }
-    Store.project(:bank_accounts, data)
+    ProjectionStore.project(:bank_accounts, data)
   end
 
   def listen(%PersistedEvent{event_type: "MoneyDeposited"} = event, state) do
@@ -114,18 +114,18 @@ defmodule Incident.EventHandler do
       event_id: event.event_id,
       event_date: event.event_date
     }
-    Store.project(:bank_accounts, data)
+    ProjectionStore.project(:bank_accounts, data)
   end
 end
 
 # Event Store Adapter
-defmodule Incident.Event.Store.Adapter do
+defmodule Incident.EventStore.Adapter do
   @callback get(String.t()) :: list
   @callback append(map) :: :ok
 end
 
-defmodule Incident.Event.Store.InMemoryAdapter do
-  @behaviour Incident.Event.Store.Adapter
+defmodule Incident.EventStore.InMemoryAdapter do
+  @behaviour Incident.EventStore.Adapter
 
   use Agent
 
@@ -161,7 +161,7 @@ defmodule Incident.Event.Store.InMemoryAdapter do
 end
 
 # Event Store
-defmodule Incident.Event.Store do
+defmodule Incident.EventStore do
   def get(aggregate_id) do
     apply(adapter(), :get, [aggregate_id])
   end
@@ -171,7 +171,7 @@ defmodule Incident.Event.Store do
   end
 
   defp adapter do
-    Incident.Event.Store.InMemoryAdapter
+    Incident.EventStore.InMemoryAdapter
   end
 end
 
@@ -184,11 +184,11 @@ defmodule Incident.AggregateState do
     quote do
       import Incident.AggregateState
 
-      alias Incident.Event.Store
+      alias Incident.EventStore
 
       def get(aggregate_id) do
         aggregate_id
-        |> Store.get()
+        |> EventStore.get()
         |> Enum.reduce(unquote(initial_state), fn event, state ->
           unquote(aggregate).apply(event, state)
         end)
@@ -220,7 +220,8 @@ defmodule Incident.BankAccount do
 
   alias Incident.BankAccountState
   alias Incident.Command.{DepositMoney, OpenAccount}
-  alias Incident.Event.{AccountOpened, MoneyDeposited, Store}
+  alias Incident.EventStore
+  alias Incident.Event.{AccountOpened, MoneyDeposited}
 
   @impl true
   def execute(%OpenAccount{account_number: account_number}) do
@@ -231,7 +232,7 @@ defmodule Incident.BankAccount do
           account_number: account_number,
           version: 1
         }
-        |> Store.append()
+        |> EventStore.append()
         |> case do
              {:ok, persisted_event} -> Incident.EventHandler.listen(persisted_event, state)
              error -> error
@@ -251,7 +252,7 @@ defmodule Incident.BankAccount do
           amount: amount,
           version: state.version + 1
         }
-        |> Store.append()
+        |> EventStore.append()
         |> case do
              {:ok, persisted_event} -> Incident.EventHandler.listen(persisted_event, state)
              error -> error

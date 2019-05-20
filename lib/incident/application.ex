@@ -5,8 +5,8 @@ defmodule Incident.Application do
 
   def start(_type, _args) do
     children = [
-      {Incident.Event.Store.InMemoryAdapter, []},
-      {Incident.Projection.Store.InMemoryAdapter, %{bank_accounts: []}}
+      {Incident.EventStore.InMemoryAdapter, []},
+      {Incident.ProjectionStore.InMemoryAdapter, %{bank_accounts: []}}
     ]
 
     opts = [strategy: :one_for_one, name: Incident.Supervisor]
