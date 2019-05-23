@@ -20,6 +20,15 @@ Besides the basic Event Sourcing principles, *Incident* stands based on some fou
 * *Event Store* and *Projection Store* are swappable to allow different technologies over time;
 * *Projection* can be easily rebuilt based on the persisted events and the same Aggregate business logic;
 
+## Roadmap
+
+- [x] create a *Proof of Concept* that can exercise all library components, implementation and confirm goals;
+- [ ] extract library components from the POC, remove implementation and document the implementation in the `README`;
+- [ ] use `Ecto.Schema` for command and event data structure;
+- [ ] publish version `0.1.0` to Hex and make repository public;
+- [ ] create a new repo `incident_example` with a project implementing `incident` as a reference for newcomers;
+- [ ] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
+
 ## Proof of Concept
 
 To make sure the ideas are aligned with the goals and pillars, and before any major effort, a *Proof of Concept* was created to exercise some concepts.
