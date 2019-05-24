@@ -36,28 +36,20 @@ To make sure the ideas are aligned with the goals and pillars, and before any ma
 The POC domain is a *bank account* that allow two commands, to *open an account* and to *deposit money into an account*. If the commands can be executd, based on the aggregate business logic, the events are stored and broadcasted to an event handler that will project them. Follow some *IEx* examples to demonstrate how the pieces tie together:
 
 ```elixir
-# Create a command to open an account
-iex 1 > command_open = %Incident.Command.OpenAccount{account_number: "abc"}
-%Incident.Command.OpenAccount{account_number: "abc"}
-
-# Create a command to deposit money for an aggregate
-iex 2 > command_deposit = %Incident.Command.DepositMoney{aggregate_id: "abc", amount: 100}
-%Incident.Command.DepositMoney{aggregate_id: "abc", amount: 100}
-
-# Execute a command that can be done based on the aggregate state
-iex 3 > Incident.BankAccount.execute(command_deposit)
-{:error, :account_not_found}
-
-# Successful commands being executed
-iex 4 > Incident.BankAccount.execute(command_open)
-:ok
-iex 5 > Incident.BankAccount.execute(command_deposit)
-:ok
-iex 6 > Incident.BankAccount.execute(command_deposit)
+# Create a command to open an account and execute it
+iex> %Incident.Command.OpenAccount{account_number: "abc"} |> Incident.BankAccount.execute()
 :ok
 
-# Fetching all events for a specific aggregate
-iex 7 > Incident.EventStore.get("abc")
+# Create a command to deposit money for an aggregate and execute it
+iex> %Incident.Command.DepositMoney{aggregate_id: "abc", amount: 100} |> Incident.BankAccount.execute()
+:ok
+
+# Repeat, with a different amount
+iex> %Incident.Command.DepositMoney{aggregate_id: "abc", amount: 200} |> Incident.BankAccount.execute()
+:ok
+
+# Fetch all events for a specific aggregate
+iex> Incident.EventStore.get("abc")
 [
   %Incident.Event.PersistedEvent{
     aggregate_id: "abc",
@@ -85,20 +77,19 @@ iex 7 > Incident.EventStore.get("abc")
   }
 ]
 
-# Reading from the Projection Store
-iex 8 > Incident.ProjectionStore.all(:bank_accounts)
+# Read from the Projection Store
+iex> Incident.ProjectionStore.all(:bank_accounts)
 [
   %Incident.Projection.BankAccount{
     account_number: "abc",
     aggregate_id: "abc",
-    balance: 200,
+    balance: 300,
     event_date: #DateTime<2019-05-20 21:19:01.726610Z>,
     event_id: "39233",
     version: 3
   }
 ]
 ```
-
 
 ## Installation
 
