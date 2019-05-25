@@ -2,23 +2,25 @@
 
 Event Sourcing and CQRS in Elixir made simple.
 
-## Main goals
+## Goals
 
 * incentivize the usage of *Event Sourcing* and *CQRS* as good choice for domains that can leverage the main benefits of this design pattern;
-* offer a set of abstractions that can hold main Event Sourcing principles and components, making adoption easier;
-* allow customization for fine-grained needs without compromising principles;
-* take advantage of functional programming when applying one or more events into an aggregate or to project an event to a projection;
+* serve as guidance when using Event Sourcing in your system;
+* leverage functions and reducers for executing commands and applying events;
+* allow customization for fine-grained needs without compromising the principles;
 
-## Pillars
+## Event Sourcing and CQRS
 
-Besides the basic Event Sourcing principles, *Incident* stands based on some foundation pillars:
+In a nutshell, Event Sourcing ensures that all changes to application state are stored as a sequence of events. But if you are new to *Event Sourcing* and *CQRS* I highly recommend watch [Greg Young's presentation at Code on the Beach 2014](https://www.youtube.com/watch?v=JHGkaShoyNs) before moving forward.
 
-* *Command* is a simple data structure with some basic validation;
-* *Event* is a simple data structure;
+## Main Components
+
+* *Command* is a data structure with basic validation;
+* *Event* is a data structure;
 * *Aggregate* only defines its business logic to execute a command and apply an event, but not its state;
 * *Aggregate State* is defined by playing all the events through Aggregate business logic;
-* *Event Store* and *Projection Store* are swappable to allow different technologies over time;
-* *Projection* can be easily rebuilt based on the persisted events and the same Aggregate business logic;
+* *Event Store* and *Projection Store* are swappable persistence layers to allow different technologies over time;
+* *Projection* can be rebuilt based on the persisted events and on the same Aggregate business logic;
 
 ## Roadmap
 
@@ -31,9 +33,7 @@ Besides the basic Event Sourcing principles, *Incident* stands based on some fou
 
 ## Proof of Concept
 
-To make sure the ideas are aligned with the goals and pillars, and before any major effort, a *Proof of Concept* was created to exercise some concepts.
-
-The POC domain is a *bank account* that allow two commands, to *open an account* and to *deposit money into an account*. If the commands can be executd, based on the aggregate business logic, the events are stored and broadcasted to an event handler that will project them. Follow some *IEx* examples to demonstrate how the pieces tie together:
+The POC domain is a *bank account* that allow two commands, to *open an account* and to *deposit money into an account*. If the commands can be executed, based on the aggregate business logic, the events are stored and broadcasted to an event handler that will project them. In `iex`:
 
 ```elixir
 # Create a command to open an account
@@ -44,17 +44,17 @@ iex 1 > command_open = %Incident.Command.OpenAccount{account_number: "abc"}
 iex 2 > command_deposit = %Incident.Command.DepositMoney{aggregate_id: "abc", amount: 100}
 %Incident.Command.DepositMoney{aggregate_id: "abc", amount: 100}
 
-# Execute a command that can be done based on the aggregate state
-iex 3 > Incident.BankAccount.execute(command_deposit)
-{:error, :account_not_found}
-
 # Successful commands being executed
-iex 4 > Incident.BankAccount.execute(command_open)
+iex 3 > Incident.BankAccount.execute(command_open)
+:ok
+iex 4 > Incident.BankAccount.execute(command_deposit)
 :ok
 iex 5 > Incident.BankAccount.execute(command_deposit)
 :ok
-iex 6 > Incident.BankAccount.execute(command_deposit)
-:ok
+
+# Commands are executed in the aggregate business logic, and can generate errors
+iex 6 > Incident.BankAccount.execute(command_open)
+{:error, :account_already_open}
 
 # Fetching all events for a specific aggregate
 iex 7 > Incident.EventStore.get("abc")
