@@ -1,33 +1,33 @@
 # Commands
-defmodule Incident.Command.OpenAccount do
+defmodule Bank.Command.OpenAccount do
   defstruct [:account_number]
 end
 
-defmodule Incident.Command.DepositMoney do
+defmodule Bank.Command.DepositMoney do
   defstruct [:aggregate_id, :amount]
 end
 
 # Events
-defmodule Incident.Event.AccountOpened do
+defmodule Bank.Event.AccountOpened do
   defstruct [:aggregate_id, :account_number, :version]
 end
 
-defmodule Incident.Event.MoneyDeposited do
+defmodule Bank.Event.MoneyDeposited do
   defstruct [:aggregate_id, :amount, :version]
 end
 
 # Projection
 
-defmodule Incident.Projection.BankAccount do
+defmodule Bank.Projection.BankAccount do
   defstruct [:aggregate_id, :account_number, :version, :balance, :event_id, :event_date]
 end
 
 # Event Handler
-defmodule Incident.EventHandler do
+defmodule Bank.EventHandler do
+  alias Bank.Projection.BankAccount
+  alias Bank.BankAccount, as: Aggregate
   alias Incident.Event.PersistedEvent
   alias Incident.ProjectionStore
-  alias Incident.Projection.BankAccount
-  alias Incident.BankAccount, as: Aggregate
 
   def listen(%PersistedEvent{event_type: "AccountOpened"} = event, state) do
     new_state = Aggregate.apply(event, state)
@@ -57,9 +57,9 @@ defmodule Incident.EventHandler do
 end
 
 # Aggregate State
-defmodule Incident.BankAccountState do
+defmodule Bank.BankAccountState do
   use Incident.AggregateState,
-    aggregate: Incident.BankAccount,
+    aggregate: Bank.BankAccount,
     initial_state: %{
       aggregate_id: nil,
       account_number: nil,
@@ -70,13 +70,14 @@ defmodule Incident.BankAccountState do
 end
 
 # Aggregate
-defmodule Incident.BankAccount do
+defmodule Bank.BankAccount do
   @behaviour Incident.Aggregate
 
-  alias Incident.BankAccountState
-  alias Incident.Command.{DepositMoney, OpenAccount}
+  alias Bank.BankAccountState
+  alias Bank.Command.{DepositMoney, OpenAccount}
+  alias Bank.Event.{AccountOpened, MoneyDeposited}
+  alias Bank.EventHandler
   alias Incident.EventStore
-  alias Incident.Event.{AccountOpened, MoneyDeposited}
 
   @impl true
   def execute(%OpenAccount{account_number: account_number}) do
@@ -89,7 +90,7 @@ defmodule Incident.BankAccount do
         }
         |> EventStore.append()
         |> case do
-             {:ok, persisted_event} -> Incident.EventHandler.listen(persisted_event, state)
+             {:ok, persisted_event} -> EventHandler.listen(persisted_event, state)
              error -> error
            end
 
@@ -109,7 +110,7 @@ defmodule Incident.BankAccount do
         }
         |> EventStore.append()
         |> case do
-             {:ok, persisted_event} -> Incident.EventHandler.listen(persisted_event, state)
+             {:ok, persisted_event} -> EventHandler.listen(persisted_event, state)
              error -> error
            end
 
