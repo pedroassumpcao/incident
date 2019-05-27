@@ -22,3 +22,5 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 incident-*.tar
 
+# Elixir Language Server
+/.elixir_ls
