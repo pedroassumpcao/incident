@@ -1,10 +1,15 @@
 defmodule Incident.EventStore.InMemoryAdapter do
+  @moduledoc """
+  Implements an in-memory Event Store using Agents.
+  """
+
   @behaviour Incident.EventStore.Adapter
 
   use Agent
 
   alias Incident.Event.PersistedEvent
 
+  @spec start_link(list) :: GenServer.on_start()
   def start_link(initial_value) do
     Agent.start_link(fn -> initial_value end, name: __MODULE__)
   end
