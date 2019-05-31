@@ -1,13 +1,19 @@
 defmodule Incident.ProjectionStore.InMemoryAdapter do
+  @moduledoc """
+  Implements an in-memory Projection Store using Agents.
+  """
+
   @behaviour Incident.ProjectionStore.Adapter
 
   use Agent
 
+  @spec start_link(any) :: GenServer.on_start()
   def start_link(initial_state) do
     Agent.start_link(fn -> initial_state end, name: __MODULE__)
   end
 
   @impl true
+  # credo:disable-for-this-file
   def project(projection_name, %{aggregate_id: aggregate_id} = data) do
     Agent.update(__MODULE__, fn state ->
       update_in(state, [projection_name], fn projections ->
