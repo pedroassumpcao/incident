@@ -3,6 +3,8 @@ defmodule Incident.EventStore.Adapter do
   Defines the API for an Event Store adapter.
   """
 
+  alias Incident.Event.PersistedEvent
+
   @doc """
   Receives an aggregate id and returns a list containing all persisted events from the Event Store.
   """
@@ -11,5 +13,5 @@ defmodule Incident.EventStore.Adapter do
   @doc """
   Appends an event to the Event Store.
   """
-  @callback append(map) :: :ok
+  @callback append(map) :: {:ok, PersistedEvent.t()}
 end
