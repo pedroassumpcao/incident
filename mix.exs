@@ -1,13 +1,21 @@
 defmodule Incident.MixProject do
   use Mix.Project
 
+  @github "https://github.com/pedroassumpcao/incident"
+
   def project do
     [
       app: :incident,
       version: "0.1.0",
       elixir: "~> 1.8",
+      build_embedded: Mix.env == :prod,
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      docs: [extras: ["README.md"]],
+      package: package(),
+      source_url: @github,
+      homepage_url: @github,
+      description: "Event Sourcing and CQRS abstractions."
     ]
   end
 
@@ -25,4 +33,14 @@ defmodule Incident.MixProject do
       {:ex_doc, "~> 0.20.2", only: :dev, runtime: false}
     ]
   end
+
+  defp package do
+    [
+      name: "incident",
+      maintainers: ["Pedro Assumpcao"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => @github}
+    ]
+  end
+
 end
