@@ -63,8 +63,8 @@ defmodule Incident.MixProject do
         "compile --force --warnings-as-errors",
         "credo --strict",
         "format --check-formatted",
-        "dialyzer --halt-exit-status",
-        "coveralls"
+        "coveralls",
+        "dialyzer --halt-exit-status"
       ]
     ]
   end
