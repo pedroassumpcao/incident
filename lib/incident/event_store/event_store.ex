@@ -17,6 +17,6 @@ defmodule Incident.EventStore do
 
   @spec adapter :: module
   defp adapter do
-    Incident.EventStore.InMemoryAdapter
+    Application.get_env(:incident, :event_store)[:adapter]
   end
 end

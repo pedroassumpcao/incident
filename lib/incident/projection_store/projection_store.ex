@@ -17,6 +17,6 @@ defmodule Incident.ProjectionStore do
 
   @spec adapter :: module
   defp adapter do
-    Incident.ProjectionStore.InMemoryAdapter
+    Application.get_env(:incident, :projection_store)[:adapter]
   end
 end
