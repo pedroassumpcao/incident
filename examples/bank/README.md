@@ -4,7 +4,7 @@ Example application using Incident for Event Sourcing and CQRS.
 
 ## Getting Started
 
-As an implementation example, a *Bank* application that allow two commands, to *open an account* and to *deposit money into an account*. If the commands can be executed, based on the aggregate business logic, the events are stored and broadcasted to an event handler that will project them.
+As an implementation example, a **Bank** application that allow two commands, to **open an account** and to **deposit money into an account**. If the commands can be executed, based on the aggregate business logic, the events are stored and broadcasted to an event handler that will project them.
 
 ### Implementation
 
@@ -12,7 +12,7 @@ The implementation below is what we have currently in this example application:
 
 ### Event Store and Projection Store Setup
 
-Configure `incident` Event Store and Projection store adapter and its options. The options will be used during the adapter initialization.
+Configure `incident` **Event Store** and **Projection Store** adapters and its options. The options will be used during the adapter initialization.
 
 In our case, the Event Store will start as an empty list, and the Projection Store will have an empty list of `bank_accounts` as projection:
 
@@ -145,7 +145,7 @@ end
 
 #### Aggregate State
 
-The *Aggregate State* is used to accumulate the state of an aggregate after every event applied. It starts the initial state of an aggregate.
+The **Aggregate State** is used to accumulate the state of an aggregate after every event applied. It starts the initial state of an aggregate.
 
 ```elixir
 defmodule Bank.BankAccountState do
@@ -163,7 +163,7 @@ end
 
 #### Event Handler
 
-The *Event Handler* will define the business logic for every event. The most common, it is to project new data to the *Projection Store*.
+The **Event Handler** will define the business logic for every event. The most common, it is to project new data to the **Projection Store**.
 
 ```elixir
 defmodule Bank.EventHandler do
