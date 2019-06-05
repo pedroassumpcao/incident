@@ -13,20 +13,24 @@ defmodule Incident.Application do
     Supervisor.start_link(children, opts)
   end
 
+  @spec event_store_adapter :: module | no_return
   defp event_store_adapter do
     event_store_config()[:adapter] ||
       raise "An Event Store adapter is required in the config."
   end
 
+  @spec event_store_options :: map | list
   defp event_store_options do
     event_store_config()[:options][:initial_state]
   end
 
+  @spec projection_store_adapter :: module | no_return
   defp projection_store_adapter do
     projection_store_config()[:adapter] ||
       raise "A Projection Store adapter is required in the config."
   end
 
+  @spec projection_store_options :: map | list
   defp projection_store_options do
     projection_store_config()[:options][:initial_state]
   end
