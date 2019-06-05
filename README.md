@@ -55,11 +55,26 @@ As an implementation example, a *Bank Account* application that allow two comman
 
 ### Event Store and Projection Store Setup
 
-Simply add both children specs in the application supervision tree. This will setup the In Memory Adapter for both stores:
+Configure `incident` Event Store and Projection store adapter and options:
 
 ```elixir
-{Incident.EventStore.InMemoryAdapter, []},
-{Incident.ProjectionStore.InMemoryAdapter, %{bank_accounts: []}}
+config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter
+
+config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter
+```
+
+Depending the adapter used, you might want to pass some options that will be used during initialization:
+
+```elixir
+config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter,
+  options: [
+    initial_state: []
+]
+
+config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter,
+  options: [
+    initial_state: %{bank_accounts: []}
+]
 ```
 
 #### Commands
