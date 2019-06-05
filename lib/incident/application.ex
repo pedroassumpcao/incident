@@ -19,9 +19,9 @@ defmodule Incident.Application do
       raise "An Event Store adapter is required in the config."
   end
 
-  @spec event_store_options :: map | list
+  @spec event_store_options :: keyword
   defp event_store_options do
-    event_store_config()[:options][:initial_state]
+    event_store_config()[:options] || []
   end
 
   @spec projection_store_adapter :: module | no_return
@@ -30,9 +30,9 @@ defmodule Incident.Application do
       raise "A Projection Store adapter is required in the config."
   end
 
-  @spec projection_store_options :: map | list
+  @spec projection_store_options :: keyword
   defp projection_store_options do
-    projection_store_config()[:options][:initial_state]
+    projection_store_config()[:options] || []
   end
 
   @spec event_store_config :: keyword

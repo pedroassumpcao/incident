@@ -9,9 +9,11 @@ defmodule Incident.EventStore.InMemoryAdapter do
 
   alias Incident.Event.PersistedEvent
 
-  @spec start_link(list) :: GenServer.on_start()
-  def start_link(initial_value) do
-    Agent.start_link(fn -> initial_value end, name: __MODULE__)
+  @spec start_link(keyword) :: GenServer.on_start()
+  def start_link(opts \\ []) do
+    initial_state = Keyword.get(opts, :initial_state, [])
+
+    Agent.start_link(fn -> initial_state end, name: __MODULE__)
   end
 
   @impl true

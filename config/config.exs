@@ -1,13 +1,7 @@
 use Mix.Config
 
 config :incident, :event_store,
-  adapter: Incident.EventStore.InMemoryAdapter,
-  options: %{
-    initial_state: []
-  }
+  adapter: Incident.EventStore.InMemoryAdapter
 
 config :incident, :projection_store,
-  adapter: Incident.ProjectionStore.InMemoryAdapter,
-  options: %{
-    initial_state: %{}
-  }
+  adapter: Incident.ProjectionStore.InMemoryAdapter

@@ -7,8 +7,10 @@ defmodule Incident.ProjectionStore.InMemoryAdapter do
 
   use Agent
 
-  @spec start_link(any) :: GenServer.on_start()
-  def start_link(initial_state) do
+  @spec start_link(keyword) :: GenServer.on_start()
+  def start_link(opts \\ []) do
+    initial_state = Keyword.get(opts, :initial_state, %{})
+
     Agent.start_link(fn -> initial_state end, name: __MODULE__)
   end
 
