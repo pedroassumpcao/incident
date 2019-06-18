@@ -31,23 +31,23 @@ defmodule Incident.AggregateStateTest do
 
   describe "get/1" do
     test "returns the aggregate initial state when no event happened yet" do
-      %{aggregate_id: nil, total: 0} = CounterState.get("abc")
+      assert %{aggregate_id: nil, total: 0} = CounterState.get("abc")
     end
 
     test "returns the aggregate state after applying all events" do
       event1 = %CounterAdded{aggregate_id: "abc", amount: 1, version: 1}
       Incident.EventStore.append(event1)
-      %{aggregate_id: "abc", total: 1} = CounterState.get("abc")
+      assert %{aggregate_id: "abc", total: 1} = CounterState.get("abc")
 
       event2 = %CounterAdded{aggregate_id: "abc", amount: 3, version: 2}
       Incident.EventStore.append(event2)
-      %{aggregate_id: "abc", total: 4} = CounterState.get("abc")
+      assert %{aggregate_id: "abc", total: 4} = CounterState.get("abc")
 
       event3 = %CounterAdded{aggregate_id: "abc", amount: 2, version: 3}
       event4 = %CounterAdded{aggregate_id: "abc", amount: 10, version: 4}
       Incident.EventStore.append(event3)
       Incident.EventStore.append(event4)
-      %{aggregate_id: "abc", total: 16} = CounterState.get("abc")
+      assert %{aggregate_id: "abc", total: 16} = CounterState.get("abc")
     end
   end
 end

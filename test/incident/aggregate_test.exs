@@ -25,11 +25,12 @@ defmodule Incident.AggregateTest do
 
   describe "execute/1" do
     test "returns `:ok` if the command is successfully exectued" do
-      :ok = Counter.execute(%AddCounter{aggregate_id: "abc", amount: 1, version: 1})
+      assert :ok = Counter.execute(%AddCounter{aggregate_id: "abc", amount: 1, version: 1})
     end
 
     test "returns an error and reason if the command can't be executed" do
-      {:error, :invalid_command} = Counter.execute(%{aggregate_id: "abc", amount: 1, version: 1})
+      assert {:error, :invalid_command} =
+               Counter.execute(%{aggregate_id: "abc", amount: 1, version: 1})
     end
   end
 
@@ -38,7 +39,7 @@ defmodule Incident.AggregateTest do
       state = %{aggregate_id: "abc", amount: 1, version: 1}
       event = %CounterAdded{aggregate_id: "abc", amount: 5, version: 2}
 
-      %{aggregate_id: "abc", amount: 6, version: 2} = Counter.apply(event, state)
+      assert %{aggregate_id: "abc", amount: 6, version: 2} = Counter.apply(event, state)
     end
   end
 end
