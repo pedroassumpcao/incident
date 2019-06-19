@@ -1,12 +1,11 @@
 defmodule Incident.AggregateStateTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   alias Ecto.UUID
 
   setup do
     on_exit(fn ->
-      :ok = Application.stop(:incident)
-
+      Application.stop(:incident)
       {:ok, _apps} = Application.ensure_all_started(:incident)
     end)
   end

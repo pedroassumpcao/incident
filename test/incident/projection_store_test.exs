@@ -1,10 +1,10 @@
 defmodule Incident.ProjectionStoreTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   alias Incident.ProjectionStore
 
   setup do
-    :ok = Application.stop(:incident)
+    Application.stop(:incident)
 
     projection_store_config = [
       adapter: Incident.ProjectionStore.InMemoryAdapter,
@@ -17,8 +17,7 @@ defmodule Incident.ProjectionStoreTest do
     {:ok, _apps} = Application.ensure_all_started(:incident)
 
     on_exit(fn ->
-      :ok = Application.stop(:incident)
-
+      Application.stop(:incident)
       {:ok, _apps} = Application.ensure_all_started(:incident)
     end)
   end
