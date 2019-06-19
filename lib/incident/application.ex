@@ -15,8 +15,7 @@ defmodule Incident.Application do
 
   @spec event_store_adapter :: module | no_return
   defp event_store_adapter do
-    event_store_config()[:adapter] ||
-      raise "An Event Store adapter is required in the config."
+    event_store_config()[:adapter] || raise "An Event Store adapter is required in the config."
   end
 
   @spec event_store_options :: keyword
