@@ -26,13 +26,13 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 
 ### Next Steps
 - [ ] use `Ecto.Schema` for command and event data structure;
-- [ ] publish version `0.1.0` to Hex and make repository public;
 - [ ] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
 
 ### Done
 - [x] create a **Proof of Concept** that can exercise all library components, implementation and confirm goals;
 - [x] extract library components from the POC, remove implementation and document the implementation in the `README`;
 - [x] add example application within the library as a reference for newcomers;
+- [x] publish version `0.1.0` to Hex and make repository public;
 
 ## Installation
 
