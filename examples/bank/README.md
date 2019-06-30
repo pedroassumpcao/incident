@@ -167,11 +167,14 @@ The **Event Handler** will define the business logic for every event. The most c
 
 ```elixir
 defmodule Bank.EventHandler do
-  alias Bank.Projections.BankAccount
-  alias Bank.BankAccount, as: Aggregate
+  @behaviour Incident.EventHandler
+
   alias Incident.Event.PersistedEvent
   alias Incident.ProjectionStore
+  alias Bank.Projections.BankAccount
+  alias Bank.BankAccount, as: Aggregate
 
+  @impl true
   def listen(%PersistedEvent{event_type: "AccountOpened"} = event, state) do
     new_state = Aggregate.apply(event, state)
     data = %BankAccount{
@@ -185,6 +188,7 @@ defmodule Bank.EventHandler do
     ProjectionStore.project(:bank_accounts, data)
   end
 
+  @impl true
   def listen(%PersistedEvent{event_type: "MoneyDeposited"} = event, state) do
     new_state = Aggregate.apply(event, state)
     data = %BankAccount{
