@@ -56,6 +56,16 @@ defmodule Bank.Events.MoneyDeposited do
 end
 ```
 
+#### Command Handler
+
+The **Command Handler** is the entry point in the command model. Its task is receive, validate and exectue the command through the aggregate. If a command is invalid in its structure and basic data, the command handler will reject it, return a command error.
+
+```elixir
+defmodule Bank.BankAccountCommandHandler do
+  use Incident.CommandHandler, aggregate: Bank.BankAccount
+end
+```
+
 #### Aggregate
 
 The aggregate will implement two functions:

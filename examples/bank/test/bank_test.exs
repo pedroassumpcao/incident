@@ -1,7 +1,7 @@
 defmodule BankTest do
   use ExUnit.Case
 
-  alias Bank.BankAccount
+  alias Bank.BankAccountCommandHandler
   alias Bank.Commands.{DepositMoney, OpenAccount}
   alias Ecto.UUID
 
@@ -18,7 +18,7 @@ defmodule BankTest do
   @command_deposit_money %DepositMoney{aggregate_id: @account_number, amount: 100}
 
   test "executes an open account command" do
-    assert :ok = BankAccount.execute(@command_open_account)
+    assert :ok = BankAccountCommandHandler.receive(@command_open_account)
 
     assert [event] = Incident.EventStore.get(@account_number)
 
@@ -40,8 +40,8 @@ defmodule BankTest do
   end
 
   test "invalid commands don't generate new events" do
-    assert :ok = BankAccount.execute(@command_open_account)
-    assert {:error, :account_already_opened} = BankAccount.execute(@command_open_account)
+    assert :ok = BankAccountCommandHandler.receive(@command_open_account)
+    assert {:error, :account_already_opened} = BankAccountCommandHandler.receive(@command_open_account)
 
     assert [event] = Incident.EventStore.get(@account_number)
 
@@ -63,9 +63,9 @@ defmodule BankTest do
   end
 
   test "executes an open account and deposit money commands" do
-    assert :ok = BankAccount.execute(@command_open_account)
-    assert :ok = BankAccount.execute(@command_deposit_money)
-    assert :ok = BankAccount.execute(@command_deposit_money)
+    assert :ok = BankAccountCommandHandler.receive(@command_open_account)
+    assert :ok = BankAccountCommandHandler.receive(@command_deposit_money)
+    assert :ok = BankAccountCommandHandler.receive(@command_deposit_money)
 
     assert [event1, event2, event3] = Incident.EventStore.get(@account_number)
 
