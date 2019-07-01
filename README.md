@@ -16,9 +16,11 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 ## Main Components
 
 * **Command** is a data structure with basic validation;
-* **Event** is a data structure;
+* **Command Handler** is the entry point of a command in the write side, it performs basic command validation and executes the command through the aggregate;
 * **Aggregate** only defines its business logic to execute a command and apply an event, but not its state;
 * **Aggregate State** is defined by playing all the events through Aggregate business logic;
+* **Event** is a data structure;
+* **Event Handler** receives a persisted event and performs the actions in the read side;
 * **Event Store** and **Projection Store** are swappable persistence layers to allow different technologies over time;
 * **Projection** can be rebuilt based on the persisted events and on the same Aggregate business logic;
 
@@ -26,8 +28,10 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 
 ### Next Steps
 - [ ] define behaviour for event handlers;
-- [ ] define behaviour for command handlers;
+- [ ] define a macro for command handlers;
 - [ ] use `Ecto.Schema` for command and event data structure;
+- [ ] validate commands in the command handlers;
+- [ ] move event persistency from aggregates to command handlers;
 - [ ] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
 
 ### Done
