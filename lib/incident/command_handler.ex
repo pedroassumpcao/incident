@@ -14,18 +14,19 @@ defmodule Incident.CommandHandler do
       alias Incident.EventStore
 
       @doc """
-      Receives the command, validates it and executes it through the aggregate.
+      Receives the command struct, validates it and executes it through the aggregate.
+      In case the command is invalid, returns an error.
       """
       @spec receive(struct) :: :ok | {:error, atom}
       def receive(command) do
-        if valid?(command) do
+        command_module = command.__struct__
+
+        if command_module.valid?(command) do
           unquote(aggregate).execute(command)
         else
           {:error, :invalid_command}
         end
       end
-
-      def valid?(_command), do: true
     end
   end
 end
