@@ -1,6 +1,6 @@
 # Incident
 
-Event Sourcing and CQRS in Elixir made simple.
+Event Sourcing and CQRS in Elixir abstractions.
 
 ## Goals
 
@@ -27,10 +27,7 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 ## Roadmap
 
 ### Next Steps
-- [ ] define behaviour for event handlers;
-- [ ] define a macro for command handlers;
-- [ ] use `Ecto.Schema` for command and event data structure;
-- [ ] validate commands in the command handlers;
+- [ ] use `Ecto.Schema` event data structure;
 - [ ] move event persistency from aggregates to command handlers;
 - [ ] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
 
@@ -39,6 +36,12 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 - [x] extract library components from the POC, remove implementation and document the implementation in the `README`;
 - [x] add example application within the library as a reference for newcomers;
 - [x] publish version `0.1.0` to Hex and make repository public;
+- [x] define behaviour for event handlers;
+- [x] define a macro for command handlers;
+- [x] define behaviour for commands;
+- [x] validate commands in the command handlers using command implementation;
+- [x] use `Ecto.Schema` for command data structure;
+
 
 ## Installation
 
