@@ -4,7 +4,14 @@ defmodule Incident.CommandHandlerTest do
   alias Ecto.UUID
 
   defmodule AddCounter do
+    @behaviour Incident.Command
+
     defstruct [:aggregate_id, :amount, :version]
+
+    @impl true
+    def valid?(command) do
+      command.aggregate_id && command.amount && command.version
+    end
   end
 
   defmodule Counter do
@@ -12,8 +19,6 @@ defmodule Incident.CommandHandlerTest do
 
     @impl true
     def execute(%AddCounter{}), do: :ok
-
-    def execute(_invalid_command), do: {:error, :invalid_command}
 
     @impl true
     def apply(_event, state), do: state
@@ -35,9 +40,12 @@ defmodule Incident.CommandHandlerTest do
                })
     end
 
-    test "returns an error and reason if the command can't be executed" do
+    test "returns an error and reason if the command is invalid" do
       assert {:error, :invalid_command} =
-               CounterCommandHandler.receive(%{aggregate_id: @aggregate_id, amount: 1, version: 1})
+               CounterCommandHandler.receive(%AddCounter{
+                 aggregate_id: @aggregate_id,
+                 amount: 1
+               })
     end
   end
 end

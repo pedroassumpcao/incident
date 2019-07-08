@@ -1,7 +1,7 @@
 defmodule Incident.CommandHandler do
   @moduledoc """
   Defines a Command Handler that receives a command to:
-  - ensure that the command is valid;
+  - ensure that the command data is valid based on the command validations;
   - executes the command using the aggregate;
   """
 
@@ -15,7 +15,7 @@ defmodule Incident.CommandHandler do
 
       @doc """
       Receives the command struct, validates it and executes it through the aggregate.
-      In case the command is invalid, returns an error.
+      It returns ane error in case of an invalid command.
       """
       @spec receive(struct) :: :ok | {:error, atom}
       def receive(command) do
