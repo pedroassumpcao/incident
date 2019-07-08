@@ -1,10 +1,28 @@
 defmodule Bank.Commands.DepositMoney do
+  @moduledoc """
+  Deposit Money command using `Ecto.Schema` and `Ecto.Changeset` to define and validate fields.
+  """
   @behaviour Incident.Command
 
-  defstruct [:aggregate_id, :amount]
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  @primary_key false
+  embedded_schema do
+    field(:aggregate_id, :string)
+    field(:amount, :integer)
+  end
+
+  @required_fields ~w(aggregate_id amount)a
 
   @impl true
-  def valid?(_) do
-    true
+  def valid?(command) do
+    data = Map.from_struct(command)
+
+    %__MODULE__{}
+    |> cast(data, @required_fields)
+    |> validate_required(@required_fields)
+    |> validate_number(:amount, greater_than: 0)
+    |> Map.get(:valid?)
   end
 end
