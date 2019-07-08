@@ -2,6 +2,7 @@ defmodule Bank.Commands.DepositMoney do
   @moduledoc """
   Deposit Money command using `Ecto.Schema` and `Ecto.Changeset` to define and validate fields.
   """
+
   @behaviour Incident.Command
 
   use Ecto.Schema

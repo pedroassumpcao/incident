@@ -30,21 +30,50 @@ config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryA
 
 #### Commands
 
-Define the commands as structs:
+Implement the behaviour `Incident.Command`. Below are two examples that demonstrate how commands can be implemented using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas and `Ecto.Changeset` for validations:
 
 ```elixir
 defmodule Bank.Commands.OpenAccount do
+  @behaviour Incident.Command
+
   defstruct [:account_number]
+
+  @impl true
+  def valid?(command) do
+    not is_nil(command.account_number)
+  end
 end
 
 defmodule Bank.Commands.DepositMoney do
-  defstruct [:aggregate_id, :amount]
+  @behaviour Incident.Command
+
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  @primary_key false
+  embedded_schema do
+    field(:aggregate_id, :string)
+    field(:amount, :integer)
+  end
+
+  @required_fields ~w(aggregate_id amount)a
+
+  @impl true
+  def valid?(command) do
+    data = Map.from_struct(command)
+
+    %__MODULE__{}
+    |> cast(data, @required_fields)
+    |> validate_required(@required_fields)
+    |> validate_number(:amount, greater_than: 0)
+    |> Map.get(:valid?)
+  end
 end
 ```
 
 #### Events
 
-Define the events as structs:
+Define the events as Elixir structs:
 
 ```elixir
 defmodule Bank.Events.AccountOpened do
@@ -58,7 +87,7 @@ end
 
 #### Command Handler
 
-The **Command Handler** is the entry point in the command model. Its task is receive, validate and exectue the command through the aggregate. If a command is invalid in its structure and basic data, the command handler will reject it, return a command error.
+The **Command Handler** is the entry point in the command model. Its task is receive, validate and exectue the command through the aggregate. If a command is invalid in its structure and basic data, the command handler will reject it, returning a invalid command error.
 
 ```elixir
 defmodule Bank.BankAccountCommandHandler do
@@ -173,16 +202,16 @@ end
 
 #### Event Handler
 
-The **Event Handler** will define the business logic for every event. The most common, it is to project new data to the **Projection Store**.
+The **Event Handler** will define the business logic for every event that happened. The most common it is to project new data to the **Projection Store** but any other side effect could happen here as well.
 
 ```elixir
 defmodule Bank.EventHandler do
   @behaviour Incident.EventHandler
 
-  alias Incident.Event.PersistedEvent
-  alias Incident.ProjectionStore
   alias Bank.Projections.BankAccount
   alias Bank.BankAccount, as: Aggregate
+  alias Incident.Event.PersistedEvent
+  alias Incident.ProjectionStore
 
   @impl true
   def listen(%PersistedEvent{event_type: "AccountOpened"} = event, state) do
@@ -216,7 +245,7 @@ end
 
 #### Projection
 
-Define the projection as structs:
+Define the projection as Elixir structs:
 
 ```elixir
 defmodule Bank.Projections.BankAccount do
@@ -236,15 +265,15 @@ iex 2 > command_deposit = %Bank.Commands.DepositMoney{aggregate_id: "abc", amoun
 %Bank.Commands.DepositMoney{aggregate_id: "abc", amount: 100}
 
 # Successful commands being executed
-iex 3 > Bank.BankAccount.execute(command_open)
+iex 3 > Bank.BankAccountCommandHandler.receive(command_open)
 :ok
-iex 4 > Bank.BankAccount.execute(command_deposit)
+iex 4 > Bank.BankAccountCommandHandler.receive(command_deposit)
 :ok
-iex 5 > Bank.BankAccount.execute(command_deposit)
+iex 5 > Bank.BankAccountCommandHandler.receive(command_deposit)
 :ok
 
-# Commands are executed in the aggregate business logic, and can generate errors
-iex 6 > Bank.BankAccount.execute(command_open)
+# Commands are executed in the aggregate business logic, and can generate business logic errors
+iex 6 > Bank.BankAccountCommandHandler.receive(command_open)
 {:error, :account_already_open}
 
 # Fetching all events for a specific aggregate
