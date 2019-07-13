@@ -7,6 +7,7 @@ defmodule Incident.CommandHandler do
 
   defmacro __using__(opts) do
     aggregate = Keyword.get(opts, :aggregate)
+    event_handler = Keyword.get(opts, :event_handler)
 
     quote do
       import Incident.CommandHandler

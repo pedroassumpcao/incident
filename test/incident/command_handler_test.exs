@@ -24,8 +24,17 @@ defmodule Incident.CommandHandlerTest do
     def apply(_event, state), do: state
   end
 
+  defmodule CounterEventHandler do
+    @behaviour Incident.EventHandler
+
+    @impl true
+    def listen(_, _) do
+      :ok
+    end
+  end
+
   defmodule CounterCommandHandler do
-    use Incident.CommandHandler, aggregate: Counter
+    use Incident.CommandHandler, aggregate: Counter, event_handler: CounterEventHandler
   end
 
   @aggregate_id UUID.generate()
