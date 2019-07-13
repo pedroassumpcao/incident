@@ -73,11 +73,18 @@ end
 
 #### Events
 
-Define the events as Elixir structs:
+Below are two examples that demonstrate how event data structures can be defined using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas. For information only, these data will be used as the `event_data` in the `Incident.Event.PersistedEvent` data structure but this is handle automatically by Incident:
 
 ```elixir
 defmodule Bank.Events.AccountOpened do
-  defstruct [:aggregate_id, :account_number, :version]
+  use Ecto.Schema
+
+  @primary_key false
+  embedded_schema do
+    field(:aggregate_id, :string)
+    field(:account_number, :string)
+    field(:version, :integer)
+  end
 end
 
 defmodule Bank.Events.MoneyDeposited do
