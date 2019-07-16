@@ -22,10 +22,10 @@ defmodule Incident.CommandHandler do
       def receive(command) do
         command_module = command.__struct__
 
-        if command_module.valid?(command) do
+        with true <- command_module.valid?(command) do
           unquote(aggregate).execute(command)
         else
-          {:error, :invalid_command}
+          false -> {:error, :invalid_command}
         end
       end
     end

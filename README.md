@@ -27,7 +27,6 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 ## Roadmap
 
 ### Next Steps
-- [ ] use `Ecto.Schema` event data structure;
 - [ ] move event persistency from aggregates to command handlers;
 - [ ] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
 
@@ -41,7 +40,7 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 - [x] define behaviour for commands;
 - [x] validate commands in the command handlers using command implementation;
 - [x] use `Ecto.Schema` for command data structure;
-
+- [x] use `Ecto.Schema` event data structure;
 
 ## Installation
 

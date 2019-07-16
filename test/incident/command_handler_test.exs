@@ -10,7 +10,11 @@ defmodule Incident.CommandHandlerTest do
 
     @impl true
     def valid?(command) do
-      command.aggregate_id && command.amount && command.version
+      if command.aggregate_id && command.amount && command.version do
+        true
+      else
+        false
+      end
     end
   end
 

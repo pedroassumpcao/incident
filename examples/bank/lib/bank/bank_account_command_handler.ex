@@ -1,3 +1,3 @@
 defmodule Bank.BankAccountCommandHandler do
-  use Incident.CommandHandler, aggregate: Bank.BankAccount
+  use Incident.CommandHandler, aggregate: Bank.BankAccount, event_handler: Bank.EventHandler
 end
