@@ -8,19 +8,12 @@ defmodule Incident.Aggregate do
   @doc """
   Receives and executes the command, performing a specific business logic for it, usually considering the aggregate state as part of the logic.
 
-  In case of an unsuccessful command and logic:
-  - an error is returned containing a business logic reason;
+  In case of a successful command and logic, a new event is composed and returned along with the aggregate state.
 
-  In case of a successful command and logic:
-  - an event data structure is composed;
-  - the event is persisted in the Event Store;
-  - the persisted event is broadcasted to the Event Handler;
+  In case of an unsuccessful command and logic, an error is returned containing a business logic reason.
 
-  Returns an error if:
-  - event can't be persisted in the Event Store;
-  - event can't be broadcasted to the Event Handler;
   """
-  @callback execute(struct) :: :ok | {:error, atom}
+  @callback execute(struct) :: {:ok, struct, map} | {:error, atom}
 
   @doc """
   Receives a persisted event and the aggregate state, performing an aggregate state update.

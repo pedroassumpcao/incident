@@ -4,23 +4,18 @@ defmodule Bank.BankAccount do
   alias Bank.BankAccountState
   alias Bank.Commands.{DepositMoney, OpenAccount}
   alias Bank.Events.{AccountOpened, MoneyDeposited}
-  alias Bank.EventHandler
-  alias Incident.EventStore
 
   @impl true
   def execute(%OpenAccount{account_number: account_number}) do
     case BankAccountState.get(account_number) do
       %{account_number: nil} = state ->
-        %AccountOpened{
+        new_event = %AccountOpened{
           aggregate_id: account_number,
           account_number: account_number,
           version: 1
         }
-        |> EventStore.append()
-        |> case do
-             {:ok, persisted_event} -> EventHandler.listen(persisted_event, state)
-             error -> error
-           end
+
+        {:ok, new_event, state}
 
       _ ->
         {:error, :account_already_opened}
@@ -31,17 +26,13 @@ defmodule Bank.BankAccount do
   def execute(%DepositMoney{aggregate_id: aggregate_id, amount: amount}) do
     case BankAccountState.get(aggregate_id) do
       %{aggregate_id: aggregate_id} = state when not is_nil(aggregate_id) ->
-        %MoneyDeposited{
+        new_event = %MoneyDeposited{
           aggregate_id: aggregate_id,
           amount: amount,
           version: state.version + 1
         }
-        |> EventStore.append()
-        |> case do
-             {:ok, persisted_event} -> EventHandler.listen(persisted_event, state)
-             error -> error
-           end
 
+        {:ok, new_event, state}
 
       _ ->
         {:error, :account_not_found}
