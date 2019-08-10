@@ -61,6 +61,8 @@ end
 
 Configure `incident` **Event Store** and **Projection Store** adapters and if desired, some options. The options will be passed in during the adapter initialization.
 
+#### In Memory Adapter
+
 ```elixir
 config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter,
   options: [
@@ -71,6 +73,35 @@ config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryA
   options: [
     initial_state: %{}
 ]
+```
+
+#### Event Store Postgres Adapter
+
+In your application `config.exs`:
+
+```elixir
+config :app_name, ecto_repos: [Incident.EventStore.Ecto.Repo]
+```
+
+In your application `dev|test|prod.exs`:
+
+```elixir
+config :incident, Incident.EventStore.Ecto.Repo, url: "ecto://postgres:postgres@localhost/database_name_dev"
+
+config :incident, :event_store, adapter: Incident.EventStore.PostgresAdapter, options: [
+  url: "ecto://postgres:postgres@localhost/database_name_dev"
+]
+
+config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter,
+  options: [
+    initial_state: %{}
+]
+```
+
+Create the application database:
+
+```
+mix ecto.create
 ```
 
 ## Getting Started
