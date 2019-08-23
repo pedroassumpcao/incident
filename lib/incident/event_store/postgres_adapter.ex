@@ -5,35 +5,40 @@ defmodule Incident.EventStore.PostgresAdapter do
 
   @behaviour Incident.EventStore.Adapter
 
+  use GenServer
+
   alias Incident.Event.PersistedEvent
-  alias Incident.EventStore.Ecto.{Query, Repo}
+  alias Incident.EventStore.Ecto.Query
 
   @spec start_link(keyword) :: GenServer.on_start()
   def start_link(opts \\ []) do
-    url = Keyword.get(opts, :url)
-
-    Repo.start_link(url: url)
+    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  @impl true
+  @impl GenServer
+  def init(opts) do
+    {:ok, opts}
+  end
+
+  @impl GenServer
+  def handle_call(:repo, _from, [repo: repo] = state) do
+    {:reply, repo, state}
+  end
+
+  @impl Incident.EventStore.Adapter
   def get(aggregate_id) do
     aggregate_id
     |> Query.get()
-    |> Repo.all()
+    |> repo().all()
   end
 
-  @impl true
+  @impl Incident.EventStore.Adapter
   def append(_event) do
     {:ok, %PersistedEvent{}}
   end
 
-  def child_spec(opts) do
-    %{
-      id: __MODULE__,
-      start: {__MODULE__, :start_link, [opts]},
-      type: :worker,
-      restart: :permanent,
-      shutdown: 500
-    }
+  @spec repo :: module()
+  defp repo do
+    GenServer.call(__MODULE__, :repo)
   end
 end
