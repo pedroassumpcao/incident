@@ -3,11 +3,10 @@ defmodule Bank.EventHandler do
 
   alias Bank.Projections.BankAccount
   alias Bank.BankAccount, as: Aggregate
-  alias Incident.Event.PersistedEvent
   alias Incident.ProjectionStore
 
   @impl true
-  def listen(%PersistedEvent{event_type: "AccountOpened"} = event, state) do
+  def listen(%{event_type: "AccountOpened"} = event, state) do
     new_state = Aggregate.apply(event, state)
     data = %BankAccount{
       aggregate_id: new_state.aggregate_id,
@@ -21,7 +20,7 @@ defmodule Bank.EventHandler do
   end
 
   @impl true
-  def listen(%PersistedEvent{event_type: "MoneyDeposited"} = event, state) do
+  def listen(%{event_type: "MoneyDeposited"} = event, state) do
     new_state = Aggregate.apply(event, state)
     data = %BankAccount{
       aggregate_id: new_state.aggregate_id,
