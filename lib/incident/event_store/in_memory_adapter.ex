@@ -7,7 +7,7 @@ defmodule Incident.EventStore.InMemoryAdapter do
 
   use Agent
 
-  alias Incident.Event.PersistedEvent
+  alias Incident.EventStore.InMemoryEvent
 
   @spec start_link(keyword) :: GenServer.on_start()
   def start_link(opts \\ []) do
@@ -26,7 +26,7 @@ defmodule Incident.EventStore.InMemoryAdapter do
 
   @impl true
   def append(event) do
-    persisted_event = %PersistedEvent{
+    persisted_event = %InMemoryEvent{
       event_id: :rand.uniform(100_000) |> Integer.to_string(),
       aggregate_id: event.aggregate_id,
       event_type: event.__struct__ |> Module.split() |> List.last(),

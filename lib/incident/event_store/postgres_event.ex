@@ -1,6 +1,6 @@
-defmodule Incident.Event.PersistedEvent do
+defmodule Incident.EventStore.PostgresEvent do
   @moduledoc """
-  Defines the common data structure for any event that is persisted in the Event Store.
+  Defines the data structure for any event for the Postgres adapter.
 
   All fields are required.
   """
@@ -18,7 +18,7 @@ defmodule Incident.Event.PersistedEvent do
   import Ecto.Changeset
 
   @primary_key false
-  embedded_schema do
+  schema "events" do
     field(:event_id, :string)
     field(:aggregate_id, :string)
     field(:event_type, :string)

@@ -7,8 +7,9 @@ defmodule Incident.EventStore.PostgresAdapter do
 
   use GenServer
 
-  alias Incident.Event.PersistedEvent
-  alias Incident.EventStore.Ecto.Query
+  import Ecto.Query, only: [from: 2]
+
+  alias Incident.EventStore.PostgresEvent, as: Event
 
   @spec start_link(keyword) :: GenServer.on_start()
   def start_link(opts \\ []) do
@@ -27,14 +28,17 @@ defmodule Incident.EventStore.PostgresAdapter do
 
   @impl Incident.EventStore.Adapter
   def get(aggregate_id) do
-    aggregate_id
-    |> Query.get()
+    from(
+      e in Event,
+      where: e.aggregate_id == ^aggregate_id,
+      order_by: [asc: e.event_date]
+    )
     |> repo().all()
   end
 
   @impl Incident.EventStore.Adapter
   def append(_event) do
-    {:ok, %PersistedEvent{}}
+    {:ok, %Event{}}
   end
 
   @spec repo :: module()
