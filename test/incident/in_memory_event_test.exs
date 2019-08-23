@@ -1,8 +1,8 @@
-defmodule Incident.Event.PersistedEventTest do
+defmodule Incident.EventStore.InMemoryEventTest do
   use Incident.DataCase, async: true
 
   alias Ecto.UUID
-  alias Incident.Event.PersistedEvent
+  alias Incident.EventStore.InMemoryEvent
 
   @valid_params %{
     event_id: UUID.generate(),
@@ -15,13 +15,13 @@ defmodule Incident.Event.PersistedEventTest do
 
   describe "changeset/2" do
     test "returns a valid changeset when all fields are valid" do
-      changeset = PersistedEvent.changeset(%PersistedEvent{}, @valid_params)
+      changeset = InMemoryEvent.changeset(%InMemoryEvent{}, @valid_params)
 
       assert changeset.valid?
     end
 
     test "returns an error when a required field is not present" do
-      changeset = PersistedEvent.changeset(%PersistedEvent{}, %{})
+      changeset = InMemoryEvent.changeset(%InMemoryEvent{}, %{})
 
       refute changeset.valid?
       assert %{event_id: ["can't be blank"]} = errors_on(changeset)
@@ -34,7 +34,7 @@ defmodule Incident.Event.PersistedEventTest do
 
     test "returns an error when a field is set with a wront type" do
       invalid_params = Map.merge(@valid_params, %{event_date: "2010-04-11"})
-      changeset = PersistedEvent.changeset(%PersistedEvent{}, invalid_params)
+      changeset = InMemoryEvent.changeset(%InMemoryEvent{}, invalid_params)
 
       refute changeset.valid?
       assert %{event_date: ["is invalid"]} = errors_on(changeset)
