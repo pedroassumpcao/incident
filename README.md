@@ -77,19 +77,29 @@ config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryA
 
 #### Event Store Postgres Adapter
 
+Add an Ecto Repo module:
+
+```
+defmodule AppName.EventStoreRepo do
+  use Ecto.Repo,
+    otp_app: :app_name,
+    adapter: Ecto.Adapters.Postgres
+end
+```
+
 In your application `config.exs`:
 
 ```elixir
-config :app_name, ecto_repos: [Incident.EventStore.Ecto.Repo]
+config :app_name, ecto_repos: [AppName.EventStoreRepo]
 ```
 
 In your application `dev|test|prod.exs`:
 
 ```elixir
-config :incident, Incident.EventStore.Ecto.Repo, url: "ecto://postgres:postgres@localhost/database_name_dev"
+config :app_name, AppName.EventStoreRepo, url: "ecto://postgres:postgres@localhost/database_name_dev"
 
 config :incident, :event_store, adapter: Incident.EventStore.PostgresAdapter, options: [
-  url: "ecto://postgres:postgres@localhost/database_name_dev"
+  repo: AppName.EventStoreRepo
 ]
 
 config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter,
@@ -101,7 +111,13 @@ config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryA
 Create the application database:
 
 ```
-mix ecto.create
+mix ecto.create -r AppName.EventStoreRepo
+```
+
+Generate the migration to create the table to store the events:
+
+```
+mix ecto.gen.migration add_events_table -r AppName.EventStoreRepo
 ```
 
 ## Getting Started
