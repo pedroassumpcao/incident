@@ -73,7 +73,7 @@ end
 
 #### Events
 
-Below are two examples that demonstrate how event data structures can be defined using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas. For information only, these data will be used as the `event_data` in the `Incident.Event.PersistedEvent` data structure but this is handle automatically by Incident:
+Below are two examples that demonstrate how event data structures can be defined using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas. For information only, these data will be used as the `event_data` in the event data structure, but this is handle automatically by Incident:
 
 ```elixir
 defmodule Bank.Events.AccountOpened do
@@ -217,11 +217,10 @@ defmodule Bank.EventHandler do
 
   alias Bank.Projections.BankAccount
   alias Bank.BankAccount, as: Aggregate
-  alias Incident.Event.PersistedEvent
   alias Incident.ProjectionStore
 
   @impl true
-  def listen(%PersistedEvent{event_type: "AccountOpened"} = event, state) do
+  def listen(%{event_type: "AccountOpened"} = event, state) do
     new_state = Aggregate.apply(event, state)
     data = %BankAccount{
       aggregate_id: new_state.aggregate_id,
@@ -235,7 +234,7 @@ defmodule Bank.EventHandler do
   end
 
   @impl true
-  def listen(%PersistedEvent{event_type: "MoneyDeposited"} = event, state) do
+  def listen(%{event_type: "MoneyDeposited"} = event, state) do
     new_state = Aggregate.apply(event, state)
     data = %BankAccount{
       aggregate_id: new_state.aggregate_id,
@@ -286,7 +285,7 @@ iex 6 > Bank.BankAccountCommandHandler.receive(command_open)
 # Fetching all events for a specific aggregate
 iex 7 > Incident.EventStore.get("abc")
 [
-  %Incident.Event.PersistedEvent{
+  %{
     aggregate_id: "abc",
     event_data: %{account_number: "abc", aggregate_id: "abc", version: 1},
     event_date: #DateTime<2019-05-20 21:18:32.892658Z>,
@@ -294,7 +293,7 @@ iex 7 > Incident.EventStore.get("abc")
     event_type: "AccountOpened",
     version: 1
   },
-  %Incident.Event.PersistedEvent{
+  %{
     aggregate_id: "abc",
     event_data: %{aggregate_id: "abc", amount: 100, version: 2},
     event_date: #DateTime<2019-05-20 21:18:46.171031Z>,
@@ -302,7 +301,7 @@ iex 7 > Incident.EventStore.get("abc")
     event_type: "MoneyDeposited",
     version: 2
   },
-  %Incident.Event.PersistedEvent{
+  %{
     aggregate_id: "abc",
     event_data: %{aggregate_id: "abc", amount: 100, version: 3},
     event_date: #DateTime<2019-05-20 21:19:01.726610Z>,
