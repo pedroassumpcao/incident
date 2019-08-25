@@ -11,20 +11,24 @@ defmodule Incident.EventStore.PostgresEvent do
           event_type: String.t() | nil,
           version: pos_integer | nil,
           event_date: DateTime.t() | nil,
-          event_data: map | nil
+          event_data: map | nil,
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
         }
 
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key false
+  @timestamps_opts [type: :utc_datetime_usec]
   schema "events" do
     field(:event_id, :string)
     field(:aggregate_id, :string)
     field(:event_type, :string)
     field(:version, :integer)
-    field(:event_date, :utc_datetime)
+    field(:event_date, :utc_datetime_usec)
     field(:event_data, :map)
+
+    timestamps()
   end
 
   @required_fields ~w(event_id aggregate_id event_type version event_date event_data)a
