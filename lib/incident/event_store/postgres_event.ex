@@ -35,5 +35,6 @@ defmodule Incident.EventStore.PostgresEvent do
     record
     |> cast(params, @required_fields)
     |> validate_required(@required_fields)
+    |> validate_number(:version, greater_than: 0)
   end
 end
