@@ -50,6 +50,7 @@ defmodule Incident.MixProject do
       {:ecto_sql, "~> 3.0"},
       {:ex_doc, "~> 0.20.2", only: :dev, runtime: false},
       {:excoveralls, "~> 0.11.1", only: :test},
+      {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"}
     ]
   end
