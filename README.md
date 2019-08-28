@@ -30,6 +30,7 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 - [ ] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
 - [ ] add Mix tasks to set up Postgres for Event Store and Projection Store;
 - [ ] add more commands and events to the example app;
+- [ ] add error modules;
 
 ### Done
 - [x] create a **Proof of Concept** that can exercise all library components, implementation and confirm goals;
