@@ -27,7 +27,7 @@ defmodule Incident.EventStore.InMemoryAdapter do
   @impl true
   def append(event) do
     persisted_event = %InMemoryEvent{
-      event_id: :rand.uniform(100_000) |> Integer.to_string(),
+      event_id: Ecto.UUID.bingenerate(),
       aggregate_id: event.aggregate_id,
       event_type: event.__struct__ |> Module.split() |> List.last(),
       version: event.version,
