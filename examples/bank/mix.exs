@@ -20,6 +20,7 @@ defmodule Bank.MixProject do
 
   defp deps do
     [
+      {:dialyxir, "~> 1.0.0-rc.6", only: [:dev, :test], runtime: false},
       {:incident, path: "../..", override: true}
     ]
   end
