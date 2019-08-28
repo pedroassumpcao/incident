@@ -29,6 +29,7 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 ### Next Steps
 - [ ] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
 - [ ] add Mix tasks to set up Postgres for Event Store and Projection Store;
+- [ ] add more commands and events to the example app;
 
 ### Done
 - [x] create a **Proof of Concept** that can exercise all library components, implementation and confirm goals;
@@ -118,7 +119,40 @@ mix ecto.create -r AppName.EventStoreRepo
 Generate the migration to create the table to store the events:
 
 ```
-mix ecto.gen.migration add_events_table -r AppName.EventStoreRepo
+mix ecto.gen.migration create_events_table -r AppName.EventStoreRepo
+```
+
+Change the migration module as follow:
+
+```
+defmodule AppName.EventStoreRepo.Migrations.CreateEventsTable do
+  use Ecto.Migration
+
+  def change do
+    create table(:events) do
+      add(:event_id, :binary_id, null: false)
+      add(:aggregate_id, :string, null: false)
+      add(:event_type, :string, null: false)
+      add(:version, :integer, null: false)
+      add(:event_date, :utc_datetime_usec, null: false)
+      add(:event_data, :map, null: false)
+
+      timestamps(type: :utc_datetime_usec)
+    end
+
+    create(index(:events, [:aggregate_id]))
+    create(index(:events, [:event_type]))
+    create(index(:events, [:event_date]))
+    create(index(:events, [:version]))
+    create constraint(:events, :version_must_be_positive, check: "version > 0")
+  end
+end
+```
+
+Run the migration:
+
+```
+mix ecto.migrate
 ```
 
 ## Getting Started
