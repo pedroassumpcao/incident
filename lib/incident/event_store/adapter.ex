@@ -11,5 +11,5 @@ defmodule Incident.EventStore.Adapter do
   @doc """
   Appends an event to the Event Store.
   """
-  @callback append(map) :: {:ok, struct}
+  @callback append(map) :: {:ok, struct} | {:error, String.t() | struct}
 end

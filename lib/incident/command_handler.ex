@@ -27,7 +27,7 @@ defmodule Incident.CommandHandler do
       - event can't be broadcasted to the Event Handler;
 
       """
-      @spec receive(struct) :: :ok | {:error, atom}
+      @spec receive(struct) :: :ok | {:error, atom | struct | String.t()}
       def receive(command) do
         command_module = command.__struct__
 
