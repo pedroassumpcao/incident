@@ -27,16 +27,25 @@ defmodule Incident.EventStore.InMemoryAdapter do
   @impl true
   def append(event) do
     persisted_event = %InMemoryEvent{
-      event_id: Ecto.UUID.bingenerate(),
+      event_id: Ecto.UUID.generate(),
       aggregate_id: event.aggregate_id,
       event_type: event.__struct__ |> Module.split() |> List.last(),
       version: event.version,
       event_date: DateTime.utc_now(),
-      event_data: Map.from_struct(event)
+      event_data: event |> Map.from_struct() |> stringify_keys()
     }
 
     Agent.update(__MODULE__, &([persisted_event] ++ &1))
 
     {:ok, persisted_event}
   end
+
+  @spec stringify_keys(map) :: map
+  defp stringify_keys(enumerable) when is_map(enumerable) do
+    Enum.into(enumerable, %{}, fn {k, v} -> {stringify_key(k), v} end)
+  end
+
+  @spec stringify_key(atom | String.t()) :: String.t()
+  defp stringify_key(key) when is_atom(key), do: Atom.to_string(key)
+  defp stringify_key(key), do: key
 end
