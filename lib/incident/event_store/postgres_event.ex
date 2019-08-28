@@ -21,7 +21,7 @@ defmodule Incident.EventStore.PostgresEvent do
 
   @timestamps_opts [type: :utc_datetime_usec]
   schema "events" do
-    field(:event_id, :string)
+    field(:event_id, :binary_id)
     field(:aggregate_id, :string)
     field(:event_type, :string)
     field(:version, :integer)

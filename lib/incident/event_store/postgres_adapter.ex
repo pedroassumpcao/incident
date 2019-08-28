@@ -39,7 +39,7 @@ defmodule Incident.EventStore.PostgresAdapter do
   @impl Incident.EventStore.Adapter
   def append(event) do
     new_event = %{
-      event_id: Ecto.UUID.bingenerate(),
+      event_id: Ecto.UUID.generate(),
       aggregate_id: event.aggregate_id,
       event_type: event.__struct__ |> Module.split() |> List.last(),
       version: event.version,
