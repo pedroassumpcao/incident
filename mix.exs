@@ -72,7 +72,8 @@ defmodule Incident.MixProject do
         "format --check-formatted",
         "coveralls",
         "dialyzer --halt-exit-status"
-      ]
+      ],
+      test: ["ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
 end

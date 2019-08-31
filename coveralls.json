@@ -6,7 +6,6 @@
     "minimum_coverage": 90
   },
   "skip_files": [
-    "test/support/*",
-    "lib/incident/event_store/postgres_adapter.ex"
+    "test/support/*"
   ]
 }
