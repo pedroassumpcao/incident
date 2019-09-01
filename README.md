@@ -44,6 +44,7 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 - [x] use `Ecto.Schema` for command data structure;
 - [x] use `Ecto.Schema` event data structure;
 - [x] move event persistency from aggregates to command handlers;
+- [x] set up CI;
 
 ## Installation
 
