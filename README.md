@@ -2,6 +2,8 @@
 
 Event Sourcing and CQRS in Elixir abstractions.
 
+Special thanks to my friend [Paulo Gonzales](https://github.com/pdgonzalez872) for the name suggestion for this library.
+
 ## Goals
 
 * incentivize the usage of **Event Sourcing** and **CQRS** as good choice for domains that can leverage the main benefits of this design pattern;
@@ -28,23 +30,26 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 
 ### Next Steps
 - [ ] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
+- [ ] publish version `0.3.0`;
 - [ ] add Mix tasks to set up Postgres for Event Store and Projection Store;
 - [ ] add more commands and events to the example app;
 - [ ] add error modules;
+- [ ] add Process Managers to orchestrate more complex business logic or side effects, with rollback actions;
 
 ### Done
-- [x] create a **Proof of Concept** that can exercise all library components, implementation and confirm goals;
-- [x] extract library components from the POC, remove implementation and document the implementation in the `README`;
-- [x] add example application within the library as a reference for newcomers;
-- [x] publish version `0.1.0` to Hex and make repository public;
-- [x] define behaviour for event handlers;
-- [x] define a macro for command handlers;
-- [x] define behaviour for commands;
-- [x] validate commands in the command handlers using command implementation;
-- [x] use `Ecto.Schema` for command data structure;
-- [x] use `Ecto.Schema` event data structure;
+- [x] set up Circle CI;
+- [x] publish version `0.2.0`;
 - [x] move event persistency from aggregates to command handlers;
-- [x] set up CI;
+- [x] use `Ecto.Schema` event data structure;
+- [x] use `Ecto.Schema` for command data structure;
+- [x] validate commands in the command handlers using command implementation;
+- [x] define behaviour for commands;
+- [x] define a macro for command handlers;
+- [x] define behaviour for event handlers;
+- [x] publish version `0.1.0` to Hex and make repository public;
+- [x] add example application within the library as a reference for newcomers;
+- [x] extract library components from the POC, remove implementation and document the implementation in the `README`;
+- [x] create a **Proof of Concept** that can exercise all library components, implementation and confirm goals;
 
 ## Installation
 
