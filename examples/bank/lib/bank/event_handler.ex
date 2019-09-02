@@ -8,7 +8,7 @@ defmodule Bank.EventHandler do
   @impl true
   def listen(%{event_type: "AccountOpened"} = event, state) do
     new_state = Aggregate.apply(event, state)
-    data = %BankAccount{
+    data = %{
       aggregate_id: new_state.aggregate_id,
       account_number: new_state.account_number,
       balance: new_state.balance,
@@ -16,13 +16,13 @@ defmodule Bank.EventHandler do
       event_id: event.event_id,
       event_date: event.event_date
     }
-    ProjectionStore.project(:bank_accounts, data)
+    ProjectionStore.project(BankAccount, data)
   end
 
   @impl true
   def listen(%{event_type: "MoneyDeposited"} = event, state) do
     new_state = Aggregate.apply(event, state)
-    data = %BankAccount{
+    data = %{
       aggregate_id: new_state.aggregate_id,
       account_number: new_state.account_number,
       balance: new_state.balance,
@@ -30,6 +30,6 @@ defmodule Bank.EventHandler do
       event_id: event.event_id,
       event_date: event.event_date
     }
-    ProjectionStore.project(:bank_accounts, data)
+    ProjectionStore.project(BankAccount, data)
   end
 end

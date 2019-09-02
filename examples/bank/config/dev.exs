@@ -8,5 +8,5 @@ config :incident, :event_store, adapter: Incident.EventStore.PostgresAdapter, op
 
 config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter,
   options: [
-    initial_state: %{bank_accounts: []}
+    initial_state: %{Bank.Projections.BankAccount => []}
 ]

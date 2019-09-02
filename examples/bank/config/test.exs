@@ -9,5 +9,5 @@ config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter,
 
 config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter,
   options: [
-    initial_state: %{bank_accounts: []}
+    initial_state: %{Bank.Projections.BankAccount => []}
 ]
