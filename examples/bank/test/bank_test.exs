@@ -42,7 +42,9 @@ defmodule BankTest do
 
   test "invalid commands don't generate new events" do
     assert :ok = BankAccountCommandHandler.receive(@command_open_account)
-    assert {:error, :account_already_opened} = BankAccountCommandHandler.receive(@command_open_account)
+
+    assert {:error, :account_already_opened} =
+             BankAccountCommandHandler.receive(@command_open_account)
 
     assert [event] = Incident.EventStore.get(@account_number)
 
