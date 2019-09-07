@@ -68,9 +68,12 @@ end
 
 ### Event Store and Projection Store Setup
 
-Configure `incident` **Event Store** and **Projection Store** adapters and if desired, some options. The options will be passed in during the adapter initialization.
+Configure `incident` **Event Store** and **Projection Store** adapters and some options. The options will be passed in during the adapter initialization.
 
 #### In Memory Adapter
+
+The goal of using the In Memory Adapter is to provide a quick way to store events and projections,
+as a playground tool. **This adapter is not suppose to be used in a real application.**
 
 ```elixir
 config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter,
@@ -84,46 +87,64 @@ config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryA
 ]
 ```
 
-#### Event Store Postgres Adapter
+#### Postgres Adapter
 
-Add an Ecto Repo module:
+The Postgres adapter uses `Ecto` behind the scenes so a lot of its configuration it is simply
+how you should configure a Postgres database for any application using Ecto.
 
-```
+There will be two databases, one to store the events and another one to be used by the projections.
+The events database will contain only one table (events) and the projections database will contain
+one table fore each projection type.
+
+Add the Ecto Repo modules for both databases:
+
+```elixir
 defmodule AppName.EventStoreRepo do
   use Ecto.Repo,
     otp_app: :app_name,
     adapter: Ecto.Adapters.Postgres
 end
+
+defmodule AppName.ProjectionStoreRepo do
+  use Ecto.Repo,
+    otp_app: :app_name,
+    adapter: Ecto.Adapters.Postgres
+end
+
 ```
 
-In your application `config.exs`:
+In your application `config.exs` specify the repositories:
 
 ```elixir
-config :app_name, ecto_repos: [AppName.EventStoreRepo]
+config :app_name, ecto_repos: [AppName.EventStoreRepo, AppName.ProjectionStoreRepo]
 ```
 
 In your application `dev|test|prod.exs`:
 
 ```elixir
-config :app_name, AppName.EventStoreRepo, url: "ecto://postgres:postgres@localhost/database_name_dev"
+config :app_name, AppName.EventStoreRepo, url: "ecto://postgres:postgres@localhost/app_name_event_store_dev"
 
-config :incident, :event_store, adapter: Incident.EventStore.PostgresAdapter, options: [
-  repo: AppName.EventStoreRepo
-]
+config :app_name, AppName.ProjectionStoreRepo, url: "ecto://postgres:postgres@localhost/app_name_projection_store_dev"
 
-config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter,
+config :incident, :event_store, adapter: Incident.EventStore.PostgresAdapter,
   options: [
-    initial_state: %{}
-]
+    repo: AppName.EventStoreRepo
+  ]
+
+config :incident, :projection_store, adapter: Incident.ProjectionStore.PostgresAdapter,
+  options: [
+    repo: AppName.ProjectionStoreRepo
+  ]
 ```
 
-Create the application database:
+Create the application databases running Ecto mix task:
 
 ```
-mix ecto.create -r AppName.EventStoreRepo
+mix ecto.create
 ```
 
-Generate the migration to create the table to store the events:
+Generate the migration to create the table to store the events. You need to specify the repository
+the migration is about because you have more than one Ecto repo:
 
 ```
 mix ecto.gen.migration create_events_table -r AppName.EventStoreRepo
@@ -131,7 +152,7 @@ mix ecto.gen.migration create_events_table -r AppName.EventStoreRepo
 
 Change the migration module as follow:
 
-```
+```elixir
 defmodule AppName.EventStoreRepo.Migrations.CreateEventsTable do
   use Ecto.Migration
 
@@ -156,19 +177,19 @@ defmodule AppName.EventStoreRepo.Migrations.CreateEventsTable do
 end
 ```
 
-Run the migration:
+Run the migration to create the `events` table:
 
 ```
 mix ecto.migrate
 ```
 
+The migrations and schemas for the projections will depend on your application domains.
+
 ## Getting Started
 
-There is an [example application](https://github.com/pedroassumpcao/incident/tree/master/examples/bank) that implements a **Bank** application for reference, including all the details and usage in **IEx** as well.
+There is an [example application](https://github.com/pedroassumpcao/incident/tree/master/examples/bank) that implements a **Bank** application for reference, including all the details and usage in **IEx** as well. It also contains projections specific to the application domain with migration and schemas defined.
 
 ## Documentation
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/incident](https://hexdocs.pm/incident).
+The full documentation can be found at [https://hexdocs.pm/incident](https://hexdocs.pm/incident).
 
