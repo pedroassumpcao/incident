@@ -1,6 +1,8 @@
 use Mix.Config
 
-config :bank, Bank.EventStoreRepo, url: "ecto://postgres:postgres@localhost/bank_test"
+config :bank, Bank.EventStoreRepo, url: "ecto://postgres:postgres@localhost/bank_event_store_test"
+
+config :bank, Bank.ProjectionStoreRepo, url: "ecto://postgres:postgres@localhost/bank_projection_store_test"
 
 config :incident, :event_store,
   adapter: Incident.EventStore.InMemoryAdapter,

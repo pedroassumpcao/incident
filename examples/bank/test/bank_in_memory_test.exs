@@ -1,4 +1,4 @@
-defmodule BankTest do
+defmodule BankInMemoryTest do
   use ExUnit.Case
 
   alias Bank.BankAccountCommandHandler
