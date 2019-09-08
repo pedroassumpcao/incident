@@ -14,7 +14,14 @@ The implementation below is what we have currently in this example application:
 
 Configure `incident` **Event Store** and **Projection Store** adapters and its options. The options will be used during the adapter initialization.
 
-In our case, the Event Store will start as an empty list, and the Projection Store will have an empty list of bank accounts as projection:
+There are two options for persistency and the adapter configuration follows below:
+
+#### In Memory Adapter
+
+This is simply a quick option to be used as a playground to exercise the library but it is not
+suppose to be used in a real application as the data will be wiped out every time the application starts.
+
+The Event Store will start as an empty list (no events), and the Projection Store will have an empty list of bank accounts as the only projection:
 
 ```elixir
 config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter,
@@ -26,6 +33,44 @@ config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryA
   options: [
     initial_state: %{Bank.Projections.BankAccount => []}
 ]
+```
+
+#### Postgres Adapter
+
+In the case of using the Postgres Adapter, that uses `Ecto` behind the scenes, we need some extra
+configuration that is identical to any configuration for `Ecto`. This example app is already
+configured with this adapter with the following setup:
+
+In `config.exs` the repositories are specified:
+
+```elixir
+config :bank, ecto_repos: [Bank.EventStoreRepo, Bank.ProjectionStoreRepo]
+```
+
+In the application `dev.exs`:
+
+```elixir
+config :bank, Bank.EventStoreRepo, url: "ecto://postgres:postgres@localhost/bank_event_store_dev"
+
+config :bank, Bank.ProjectionStoreRepo, url: "ecto://postgres:postgres@localhost/bank_projection_store_dev"
+
+config :incident, :event_store, adapter: Incident.EventStore.PostgresAdapter,
+  options: [
+    repo: Bank.EventStoreRepo
+  ]
+
+config :incident, :projection_store, adapter: Incident.ProjectionStore.PostgresAdapter,
+  options: [
+    repo: Bank.ProjectionStoreRepo
+  ]
+```
+
+Migrations for the events table and the projections are already available but you need to run some
+mix tasks for the final database setup:
+
+```
+mix ecto.create
+mix ecto.migrate
 ```
 
 #### Commands
@@ -251,20 +296,31 @@ end
 
 #### Projection
 
-Define the projection using `Ecto.Schema`:
+The projection uses `Ecto.Schema` and `Ecto.Changeset`. All projections, besides all desired fields
+to fulfill the application domain will require the fields `version`, `event_id` and `event_date`:
 
 ```elixir
 defmodule Bank.Projections.BankAccount do
   use Ecto.Schema
+  import Ecto.Changeset
 
-  @primary_key false
-  embedded_schema do
+  schema "bank_accounts" do
     field(:aggregate_id, :string)
     field(:account_number, :string)
-    field(:version, :integer)
     field(:balance, :integer)
-    field(:event_id, :string)
+    field(:version, :integer)
+    field(:event_id, :binary_id)
     field(:event_date, :utc_datetime_usec)
+
+    timestamps(type: :utc_datetime_usec)
+  end
+
+  @required_fields ~w(aggregate_id account_number balance version event_id event_date)a
+
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, @required_fields)
+    |> validate_required(@required_fields)
   end
 end
 ```
