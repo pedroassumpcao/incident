@@ -33,6 +33,8 @@ defmodule Incident.ProjectionStore.InMemoryAdapter do
         end
       end)
     end)
+
+    {:ok, data}
   end
 
   @impl true

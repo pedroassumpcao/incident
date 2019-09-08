@@ -34,7 +34,7 @@ defmodule Incident.CommandHandler do
         with true <- command_module.valid?(command),
              {:ok, new_event, state} <- unquote(aggregate).execute(command),
              {:ok, persisted_event} <- EventStore.append(new_event),
-             :ok <- unquote(event_handler).listen(persisted_event, state) do
+             {:ok, _projected_event} <- unquote(event_handler).listen(persisted_event, state) do
           :ok
         else
           false -> {:error, :invalid_command}
