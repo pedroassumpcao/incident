@@ -30,7 +30,8 @@ defmodule Incident.ProjectionStore.PostgresAdapter do
         |> repo().load(%{})
         |> Ecto.put_meta(state: :built)
 
-      record -> record
+      record ->
+        record
     end
     |> projection.changeset(data)
     |> repo().insert_or_update()

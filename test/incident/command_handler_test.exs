@@ -45,7 +45,7 @@ defmodule Incident.CommandHandlerTest do
 
     @impl true
     def listen(_, _) do
-      :ok
+      {:ok, %{}}
     end
   end
 
