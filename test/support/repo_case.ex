@@ -16,7 +16,8 @@ defmodule Incident.RepoCase do
 
   alias Ecto.Adapters.SQL.Sandbox
   alias Ecto.Changeset
-  alias Incident.EventStore.TestRepo
+  alias Incident.EventStore.TestRepo, as: EventStoreTestRepo
+  alias Incident.ProjectionStore.TestRepo, as: ProjectionStoreTestRepo
 
   using do
     quote do
@@ -25,10 +26,12 @@ defmodule Incident.RepoCase do
   end
 
   setup tags do
-    :ok = Sandbox.checkout(TestRepo)
+    :ok = Sandbox.checkout(EventStoreTestRepo)
+    :ok = Sandbox.checkout(ProjectionStoreTestRepo)
 
     unless tags[:async] do
-      Sandbox.mode(TestRepo, {:shared, self()})
+      Sandbox.mode(EventStoreTestRepo, {:shared, self()})
+      Sandbox.mode(ProjectionStoreTestRepo, {:shared, self()})
     end
 
     :ok
