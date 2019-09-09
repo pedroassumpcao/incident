@@ -1,9 +1,9 @@
 defmodule Incident.ProjectionStore.PostgresAdapterTest do
   use Incident.RepoCase, async: true
 
-  alias Incident.ProjectionStore.{PostgresAdapter, TestRepo}
-  alias Incident.Projections.Counter
   alias Ecto.UUID
+  alias Incident.Projections.Counter
+  alias Incident.ProjectionStore.{PostgresAdapter, TestRepo}
 
   setup do
     PostgresAdapter.start_link(repo: TestRepo)

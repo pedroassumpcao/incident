@@ -24,7 +24,9 @@ defmodule Incident.ProjectionStore.PostgresAdapter do
 
   @impl Incident.ProjectionStore.Adapter
   def project(projection, data) do
-    case repo().get_by(projection, aggregate_id: data.aggregate_id) do
+    projection
+    |> repo().get_by(aggregate_id: data.aggregate_id)
+    |> case do
       nil ->
         projection
         |> repo().load(%{})
@@ -46,8 +48,4 @@ defmodule Incident.ProjectionStore.PostgresAdapter do
   defp repo do
     GenServer.call(__MODULE__, :repo)
   end
-
-  # Update readme with:
-  # - PG projection config;
-  # - projection migration;
 end
