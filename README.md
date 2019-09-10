@@ -29,14 +29,14 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 ## Roadmap
 
 ### Next Steps
-- [ ] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
-- [ ] publish version `0.3.0`;
 - [ ] add Mix tasks to set up Postgres for Event Store and Projection Store;
 - [ ] add more commands and events to the example app;
 - [ ] add error modules;
 - [ ] add Process Managers to orchestrate more complex business logic or side effects, with rollback actions;
 
 ### Done
+- [x] publish version `0.3.0`;
+- [x] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
 - [x] set up Circle CI;
 - [x] publish version `0.2.0`;
 - [x] move event persistency from aggregates to command handlers;
@@ -59,7 +59,7 @@ by adding `incident` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:incident, "~> 0.2.0"}
+    {:incident, "~> 0.3.0"}
   ]
 end
 ```
@@ -137,7 +137,7 @@ config :incident, :projection_store, adapter: Incident.ProjectionStore.PostgresA
   ]
 ```
 
-Create the application databases running Ecto mix task:
+Create the application databases running the Ecto mix task:
 
 ```
 mix ecto.create
@@ -187,7 +187,11 @@ The migrations and schemas for the projections will depend on your application d
 
 ## Getting Started
 
-There is an [example application](https://github.com/pedroassumpcao/incident/tree/master/examples/bank) that implements a **Bank** application for reference, including all the details and usage in **IEx** as well. It also contains projections specific to the application domain with migration and schemas defined.
+There is an [example application](https://github.com/pedroassumpcao/incident/tree/master/examples/bank) that implements a **Bank** application for reference, including all the details and usage in **IEx** as well.
+
+It also contains projections specific to the application domain with migration and schemas defined.
+
+This example application will give you all the details in how to use **Incident**, including integration tests.
 
 ## Documentation
 
