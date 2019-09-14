@@ -1,5 +1,5 @@
 defmodule Incident.CommandHandlerTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   alias Ecto.UUID
 
@@ -45,7 +45,7 @@ defmodule Incident.CommandHandlerTest do
 
     @impl true
     def listen(_, _) do
-      :ok
+      {:ok, %{}}
     end
   end
 

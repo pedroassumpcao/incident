@@ -1,6 +1,6 @@
-defmodule Incident.Event.PersistedEvent do
+defmodule Incident.EventStore.PostgresEvent do
   @moduledoc """
-  Defines the common data structure for any event that is persisted in the Event Store.
+  Defines the data structure for any event for the Postgres adapter.
 
   All fields are required.
   """
@@ -11,20 +11,24 @@ defmodule Incident.Event.PersistedEvent do
           event_type: String.t() | nil,
           version: pos_integer | nil,
           event_date: DateTime.t() | nil,
-          event_data: map | nil
+          event_data: map | nil,
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
         }
 
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key false
-  embedded_schema do
-    field(:event_id, :string)
+  @timestamps_opts [type: :utc_datetime_usec]
+  schema "events" do
+    field(:event_id, :binary_id)
     field(:aggregate_id, :string)
     field(:event_type, :string)
     field(:version, :integer)
-    field(:event_date, :utc_datetime)
+    field(:event_date, :utc_datetime_usec)
     field(:event_data, :map)
+
+    timestamps()
   end
 
   @required_fields ~w(event_id aggregate_id event_type version event_date event_data)a
@@ -35,5 +39,6 @@ defmodule Incident.Event.PersistedEvent do
     record
     |> cast(params, @required_fields)
     |> validate_required(@required_fields)
+    |> validate_number(:version, greater_than: 0)
   end
 end

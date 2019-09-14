@@ -6,7 +6,7 @@ defmodule Incident.MixProject do
   def project do
     [
       app: :incident,
-      version: "0.2.0",
+      version: "0.3.0",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       build_embedded: Mix.env() == :prod,
@@ -47,8 +47,11 @@ defmodule Incident.MixProject do
       {:credo, "~> 1.0", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0.0-rc.6", only: [:dev, :test], runtime: false},
       {:ecto, "~> 3.1.4"},
+      {:ecto_sql, "~> 3.0"},
       {:ex_doc, "~> 0.20.2", only: :dev, runtime: false},
-      {:excoveralls, "~> 0.11.1", only: :test}
+      {:excoveralls, "~> 0.11.1", only: :test},
+      {:jason, "~> 1.0"},
+      {:postgrex, ">= 0.0.0"}
     ]
   end
 
@@ -69,7 +72,8 @@ defmodule Incident.MixProject do
         "format --check-formatted",
         "coveralls",
         "dialyzer --halt-exit-status"
-      ]
+      ],
+      test: ["ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
 end

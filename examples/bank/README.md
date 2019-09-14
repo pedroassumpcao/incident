@@ -1,10 +1,11 @@
 # Bank
 
-Example application using Incident for Event Sourcing and CQRS.
+Example application using **Incident** for Event Sourcing and CQRS.
 
 ## Getting Started
 
-As an implementation example, a **Bank** application that allow two commands, to **open an account** and to **deposit money into an account**. If the commands can be executed, based on the aggregate business logic, the events are stored and broadcasted to an event handler that will project them.
+As an implementation example, a **Bank** application that allow few commands, to **open an account** and to **deposit money into an account**.
+If the commands can be executed, based on the aggregate business logic, the events are stored and broadcasted to an event handler that will project them.
 
 ### Implementation
 
@@ -14,7 +15,14 @@ The implementation below is what we have currently in this example application:
 
 Configure `incident` **Event Store** and **Projection Store** adapters and its options. The options will be used during the adapter initialization.
 
-In our case, the Event Store will start as an empty list, and the Projection Store will have an empty list of `bank_accounts` as projection:
+There are two options for persistency and the adapter configuration follows below:
+
+#### In Memory Adapter
+
+This is simply a quick option to be used as a playground to exercise the library but it is not
+suppose to be used in a real application as the data will be wiped out every time the application starts.
+
+The Event Store will start as an empty list (no events), and the Projection Store will have an empty list of bank accounts as the only projection:
 
 ```elixir
 config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter,
@@ -24,8 +32,46 @@ config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter,
 
 config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter,
   options: [
-    initial_state: %{bank_accounts: []}
+    initial_state: %{Bank.Projections.BankAccount => []}
 ]
+```
+
+#### Postgres Adapter
+
+In the case of using the Postgres Adapter, that uses `Ecto` behind the scenes, we need some extra
+configuration that is identical to any configuration for `Ecto`. This example app is already
+configured with this adapter with the following setup:
+
+In `config.exs` the repositories are specified:
+
+```elixir
+config :bank, ecto_repos: [Bank.EventStoreRepo, Bank.ProjectionStoreRepo]
+```
+
+In the application `dev.exs`:
+
+```elixir
+config :bank, Bank.EventStoreRepo, url: "ecto://postgres:postgres@localhost/bank_event_store_dev"
+
+config :bank, Bank.ProjectionStoreRepo, url: "ecto://postgres:postgres@localhost/bank_projection_store_dev"
+
+config :incident, :event_store, adapter: Incident.EventStore.PostgresAdapter,
+  options: [
+    repo: Bank.EventStoreRepo
+  ]
+
+config :incident, :projection_store, adapter: Incident.ProjectionStore.PostgresAdapter,
+  options: [
+    repo: Bank.ProjectionStoreRepo
+  ]
+```
+
+Migrations for the events table and the projections are already available but you need to run some
+mix tasks for the final database setup:
+
+```
+mix ecto.create
+mix ecto.migrate
 ```
 
 #### Commands
@@ -73,7 +119,7 @@ end
 
 #### Events
 
-Below are two examples that demonstrate how event data structures can be defined using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas. For information only, these data will be used as the `event_data` in the `Incident.Event.PersistedEvent` data structure but this is handle automatically by Incident:
+Below are two examples that demonstrate how event data structures can be defined using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas. For information only, these data will be used as the `event_data` in the event data structure, but this is handle automatically by Incident:
 
 ```elixir
 defmodule Bank.Events.AccountOpened do
@@ -106,8 +152,10 @@ end
 
 The aggregate will implement two functions:
 
-* `execute/1`, it will receive a command and based on the business logic, append an event or return an error;
+* `execute/1`, it will receive a command and based on the business logic and on the current aggregate state, return a new event or an error;
 * `apply/2`, it will receive an event and an aggregate state, returning the new aggregate state;
+
+The aggregate logic is pure functional, there is no side effects.
 
 ```elixir
 defmodule Bank.BankAccount do
@@ -116,23 +164,18 @@ defmodule Bank.BankAccount do
   alias Bank.BankAccountState
   alias Bank.Commands.{DepositMoney, OpenAccount}
   alias Bank.Events.{AccountOpened, MoneyDeposited}
-  alias Bank.EventHandler
-  alias Incident.EventStore
 
   @impl true
   def execute(%OpenAccount{account_number: account_number}) do
     case BankAccountState.get(account_number) do
       %{account_number: nil} = state ->
-        %AccountOpened{
+        new_event = %AccountOpened{
           aggregate_id: account_number,
           account_number: account_number,
           version: 1
         }
-        |> EventStore.append()
-        |> case do
-             {:ok, persisted_event} -> EventHandler.listen(persisted_event, state)
-             error -> error
-           end
+
+        {:ok, new_event, state}
 
       _ ->
         {:error, :account_already_opened}
@@ -143,17 +186,13 @@ defmodule Bank.BankAccount do
   def execute(%DepositMoney{aggregate_id: aggregate_id, amount: amount}) do
     case BankAccountState.get(aggregate_id) do
       %{aggregate_id: aggregate_id} = state when not is_nil(aggregate_id) ->
-        %MoneyDeposited{
+        new_event = %MoneyDeposited{
           aggregate_id: aggregate_id,
           amount: amount,
           version: state.version + 1
         }
-        |> EventStore.append()
-        |> case do
-             {:ok, persisted_event} -> EventHandler.listen(persisted_event, state)
-             error -> error
-           end
 
+        {:ok, new_event, state}
 
       _ ->
         {:error, :account_not_found}
@@ -165,7 +204,7 @@ defmodule Bank.BankAccount do
     %{
       state
       | aggregate_id: event.aggregate_id,
-        account_number: event.event_data.account_number,
+        account_number: event.event_data["account_number"],
         balance: 0,
         version: event.version,
         updated_at: event.event_date
@@ -176,7 +215,7 @@ defmodule Bank.BankAccount do
   def apply(%{event_type: "MoneyDeposited"} = event, state) do
     %{
       state
-      | balance: state.balance + event.event_data.amount,
+      | balance: state.balance + event.event_data["amount"],
         version: event.version,
         updated_at: event.event_date
     }
@@ -217,13 +256,13 @@ defmodule Bank.EventHandler do
 
   alias Bank.Projections.BankAccount
   alias Bank.BankAccount, as: Aggregate
-  alias Incident.Event.PersistedEvent
   alias Incident.ProjectionStore
 
   @impl true
-  def listen(%PersistedEvent{event_type: "AccountOpened"} = event, state) do
+  def listen(%{event_type: "AccountOpened"} = event, state) do
     new_state = Aggregate.apply(event, state)
-    data = %BankAccount{
+
+    data = %{
       aggregate_id: new_state.aggregate_id,
       account_number: new_state.account_number,
       balance: new_state.balance,
@@ -231,13 +270,15 @@ defmodule Bank.EventHandler do
       event_id: event.event_id,
       event_date: event.event_date
     }
-    ProjectionStore.project(:bank_accounts, data)
+
+    ProjectionStore.project(BankAccount, data)
   end
 
   @impl true
-  def listen(%PersistedEvent{event_type: "MoneyDeposited"} = event, state) do
+  def listen(%{event_type: "MoneyDeposited"} = event, state) do
     new_state = Aggregate.apply(event, state)
-    data = %BankAccount{
+
+    data = %{
       aggregate_id: new_state.aggregate_id,
       account_number: new_state.account_number,
       balance: new_state.balance,
@@ -245,18 +286,40 @@ defmodule Bank.EventHandler do
       event_id: event.event_id,
       event_date: event.event_date
     }
-    ProjectionStore.project(:bank_accounts, data)
+
+    ProjectionStore.project(BankAccount, data)
   end
 end
 ```
 
 #### Projection
 
-Define the projection as Elixir structs:
+The projection uses `Ecto.Schema` and `Ecto.Changeset`. All projections, besides all desired fields
+to fulfill the application domain will require the fields `version`, `event_id` and `event_date`:
 
 ```elixir
 defmodule Bank.Projections.BankAccount do
-  defstruct [:aggregate_id, :account_number, :version, :balance, :event_id, :event_date]
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  schema "bank_accounts" do
+    field(:aggregate_id, :string)
+    field(:account_number, :string)
+    field(:balance, :integer)
+    field(:version, :integer)
+    field(:event_id, :binary_id)
+    field(:event_date, :utc_datetime_usec)
+
+    timestamps(type: :utc_datetime_usec)
+  end
+
+  @required_fields ~w(aggregate_id account_number balance version event_id event_date)a
+
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, @required_fields)
+    |> validate_required(@required_fields)
+  end
 end
 ```
 
@@ -286,7 +349,7 @@ iex 6 > Bank.BankAccountCommandHandler.receive(command_open)
 # Fetching all events for a specific aggregate
 iex 7 > Incident.EventStore.get("abc")
 [
-  %Incident.Event.PersistedEvent{
+  %Incident.EventStore.PostgresEvent{
     aggregate_id: "abc",
     event_data: %{account_number: "abc", aggregate_id: "abc", version: 1},
     event_date: #DateTime<2019-05-20 21:18:32.892658Z>,
@@ -294,7 +357,7 @@ iex 7 > Incident.EventStore.get("abc")
     event_type: "AccountOpened",
     version: 1
   },
-  %Incident.Event.PersistedEvent{
+  %Incident.EventStore.PostgresEvent{
     aggregate_id: "abc",
     event_data: %{aggregate_id: "abc", amount: 100, version: 2},
     event_date: #DateTime<2019-05-20 21:18:46.171031Z>,
@@ -302,7 +365,7 @@ iex 7 > Incident.EventStore.get("abc")
     event_type: "MoneyDeposited",
     version: 2
   },
-  %Incident.Event.PersistedEvent{
+  %Incident.EventStore.PostgresEvent{
     aggregate_id: "abc",
     event_data: %{aggregate_id: "abc", amount: 100, version: 3},
     event_date: #DateTime<2019-05-20 21:19:01.726610Z>,
@@ -313,9 +376,9 @@ iex 7 > Incident.EventStore.get("abc")
 ]
 
 # Reading from the Projection Store
-iex 8 > Incident.ProjectionStore.all(:bank_accounts)
+iex 8 > Incident.ProjectionStore.all(Bank.Projections.BankAccount)
 [
-  %Incident.Projections.BankAccount{
+  %Bank.Projections.BankAccount{
     account_number: "abc",
     aggregate_id: "abc",
     balance: 200,

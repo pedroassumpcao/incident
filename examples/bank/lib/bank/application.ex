@@ -5,6 +5,8 @@ defmodule Bank.Application do
 
   def start(_type, _args) do
     children = [
+      Bank.EventStoreRepo,
+      Bank.ProjectionStoreRepo
     ]
 
     opts = [strategy: :one_for_one, name: Bank.Supervisor]

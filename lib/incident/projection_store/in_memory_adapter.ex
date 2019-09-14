@@ -16,9 +16,9 @@ defmodule Incident.ProjectionStore.InMemoryAdapter do
 
   @impl true
   # credo:disable-for-this-file
-  def project(projection_name, %{aggregate_id: aggregate_id} = data) do
+  def project(projection, %{aggregate_id: aggregate_id} = data) do
     Agent.update(__MODULE__, fn state ->
-      update_in(state, [projection_name], fn projections ->
+      update_in(state, [projection], fn projections ->
         case Enum.find(projections, &(&1.aggregate_id == aggregate_id)) do
           nil ->
             [data] ++ projections
@@ -33,12 +33,14 @@ defmodule Incident.ProjectionStore.InMemoryAdapter do
         end
       end)
     end)
+
+    {:ok, data}
   end
 
   @impl true
-  def all(projection_name) do
+  def all(projection) do
     Agent.get(__MODULE__, fn state ->
-      Map.get(state, projection_name)
+      Map.get(state, projection)
     end)
   end
 end

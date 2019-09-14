@@ -1,4 +1,4 @@
-defmodule Incident.DataCase do
+defmodule Bank.RepoCase do
   @moduledoc """
   This module defines the setup for tests requiring
   access to the application's data layer.
@@ -14,12 +14,27 @@ defmodule Incident.DataCase do
 
   use ExUnit.CaseTemplate
 
+  alias Bank.EventStoreRepo
+  alias Bank.ProjectionStoreRepo
+  alias Ecto.Adapters.SQL.Sandbox
   alias Ecto.Changeset
 
   using do
     quote do
-      import Incident.DataCase
+      import Bank.RepoCase
     end
+  end
+
+  setup tags do
+    :ok = Sandbox.checkout(EventStoreRepo)
+    :ok = Sandbox.checkout(ProjectionStoreRepo)
+
+    unless tags[:async] do
+      Sandbox.mode(EventStoreRepo, {:shared, self()})
+      Sandbox.mode(ProjectionStoreRepo, {:shared, self()})
+    end
+
+    :ok
   end
 
   @doc """

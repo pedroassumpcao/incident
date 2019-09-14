@@ -4,6 +4,7 @@ jobs:
     working_directory: ~/incident
     docker:
       - image: circleci/elixir:1.7.4
+      - image: circleci/postgres:9.6.3
     environment:
       - MIX_ENV: "test"
     steps:
@@ -88,6 +89,12 @@ jobs:
           paths:
             - ~/.mix
             - _build
+      - run:
+          name: Create DB
+          command: mix ecto.create
+      - run:
+          name: Migrate DB
+          command: mix ecto.migrate
       - run:
           name: Format
           command:  mix format --check-formatted

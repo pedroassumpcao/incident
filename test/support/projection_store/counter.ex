@@ -1,11 +1,14 @@
-defmodule Bank.Projections.BankAccount do
+defmodule Incident.Projections.Counter do
+  @moduledoc """
+  Counter projection used in tests only.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
-  schema "bank_accounts" do
+  schema "counters" do
     field(:aggregate_id, :string)
-    field(:account_number, :string)
-    field(:balance, :integer)
+    field(:amount, :integer)
     field(:version, :integer)
     field(:event_id, :binary_id)
     field(:event_date, :utc_datetime_usec)
@@ -13,7 +16,7 @@ defmodule Bank.Projections.BankAccount do
     timestamps(type: :utc_datetime_usec)
   end
 
-  @required_fields ~w(aggregate_id account_number balance version event_id event_date)a
+  @required_fields ~w(aggregate_id amount version event_id event_date)a
 
   def changeset(struct, params \\ %{}) do
     struct

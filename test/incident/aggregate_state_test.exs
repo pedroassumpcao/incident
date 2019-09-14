@@ -18,7 +18,7 @@ defmodule Incident.AggregateStateTest do
 
     @impl true
     def apply(%{aggregate_id: aggregate_id, event_data: event_data}, %{total: total} = state) do
-      %{state | aggregate_id: aggregate_id, total: total + event_data.amount}
+      %{state | aggregate_id: aggregate_id, total: total + event_data["amount"]}
     end
   end
 

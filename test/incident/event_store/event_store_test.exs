@@ -3,8 +3,8 @@ defmodule Incident.EventStoreTest do
 
   alias Ecto.UUID
 
-  alias Incident.Event.PersistedEvent
   alias Incident.EventStore
+  alias Incident.EventStore.InMemoryEvent
 
   setup do
     on_exit(fn ->
@@ -28,8 +28,8 @@ defmodule Incident.EventStoreTest do
       event_added = %CounterAdded{aggregate_id: @aggregate_id, amount: 5, version: 1}
       event_removed = %CounterRemoved{aggregate_id: @aggregate_id, amount: 4, version: 2}
 
-      assert {:ok, %PersistedEvent{}} = EventStore.append(event_added)
-      assert {:ok, %PersistedEvent{}} = EventStore.append(event_removed)
+      assert {:ok, %InMemoryEvent{}} = EventStore.append(event_added)
+      assert {:ok, %InMemoryEvent{}} = EventStore.append(event_removed)
     end
   end
 
@@ -40,7 +40,7 @@ defmodule Incident.EventStoreTest do
       EventStore.append(event_added)
       EventStore.append(event_removed)
 
-      assert [%PersistedEvent{version: 1}, %PersistedEvent{version: 2}] =
+      assert [%InMemoryEvent{version: 1}, %InMemoryEvent{version: 2}] =
                EventStore.get(@aggregate_id)
     end
 

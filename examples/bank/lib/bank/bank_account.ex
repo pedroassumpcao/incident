@@ -44,7 +44,7 @@ defmodule Bank.BankAccount do
     %{
       state
       | aggregate_id: event.aggregate_id,
-        account_number: event.event_data.account_number,
+        account_number: event.event_data["account_number"],
         balance: 0,
         version: event.version,
         updated_at: event.event_date
@@ -55,7 +55,7 @@ defmodule Bank.BankAccount do
   def apply(%{event_type: "MoneyDeposited"} = event, state) do
     %{
       state
-      | balance: state.balance + event.event_data.amount,
+      | balance: state.balance + event.event_data["amount"],
         version: event.version,
         updated_at: event.event_date
     }

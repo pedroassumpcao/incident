@@ -1,8 +1,9 @@
-defmodule BankTest do
+defmodule BankInMemoryTest do
   use ExUnit.Case
 
   alias Bank.BankAccountCommandHandler
   alias Bank.Commands.{DepositMoney, OpenAccount}
+  alias Bank.Projections.BankAccount
   alias Ecto.UUID
 
   setup do
@@ -29,7 +30,7 @@ defmodule BankTest do
     assert is_map(event.event_data)
     assert event.version == 1
 
-    assert [bank_account] = Incident.ProjectionStore.all(:bank_accounts)
+    assert [bank_account] = Incident.ProjectionStore.all(BankAccount)
 
     assert bank_account.aggregate_id == @account_number
     assert bank_account.account_number == @account_number
@@ -41,7 +42,9 @@ defmodule BankTest do
 
   test "invalid commands don't generate new events" do
     assert :ok = BankAccountCommandHandler.receive(@command_open_account)
-    assert {:error, :account_already_opened} = BankAccountCommandHandler.receive(@command_open_account)
+
+    assert {:error, :account_already_opened} =
+             BankAccountCommandHandler.receive(@command_open_account)
 
     assert [event] = Incident.EventStore.get(@account_number)
 
@@ -52,7 +55,7 @@ defmodule BankTest do
     assert is_map(event.event_data)
     assert event.version == 1
 
-    assert [bank_account] = Incident.ProjectionStore.all(:bank_accounts)
+    assert [bank_account] = Incident.ProjectionStore.all(BankAccount)
 
     assert bank_account.aggregate_id == @account_number
     assert bank_account.account_number == @account_number
@@ -90,7 +93,7 @@ defmodule BankTest do
     assert is_map(event3.event_data)
     assert event3.version == 3
 
-    assert [bank_account] = Incident.ProjectionStore.all(:bank_accounts)
+    assert [bank_account] = Incident.ProjectionStore.all(BankAccount)
 
     assert bank_account.aggregate_id == @account_number
     assert bank_account.account_number == @account_number

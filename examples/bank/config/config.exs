@@ -1,13 +1,5 @@
 use Mix.Config
 
-config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter,
-  options: [
-    initial_state: []
-]
+config :bank, ecto_repos: [Bank.EventStoreRepo, Bank.ProjectionStoreRepo]
 
-config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter,
-  options: [
-    initial_state: %{bank_accounts: []}
-]
-
-#     import_config "#{Mix.env()}.exs"
+import_config "#{Mix.env()}.exs"
