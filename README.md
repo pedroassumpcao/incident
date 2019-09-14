@@ -2,7 +2,7 @@
 
 Event Sourcing and CQRS in Elixir abstractions.
 
-Special thanks to my friend [Paulo Gonzales](https://github.com/pdgonzalez872) for the name suggestion for this library.
+Special thanks to my friend [Paulo Gonzalez](https://github.com/pdgonzalez872) for the name suggestion for this library.
 
 ## Goals
 
