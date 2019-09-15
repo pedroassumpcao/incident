@@ -122,9 +122,17 @@ config :app_name, ecto_repos: [AppName.EventStoreRepo, AppName.ProjectionStoreRe
 In your application `dev|test|prod.exs`:
 
 ```elixir
-config :app_name, AppName.EventStoreRepo, url: "ecto://postgres:postgres@localhost/app_name_event_store_dev"
+config :app_name, AppName.EventStoreRepo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "app_name_event_store_dev"
 
-config :app_name, AppName.ProjectionStoreRepo, url: "ecto://postgres:postgres@localhost/app_name_projection_store_dev"
+config :app_name, AppName.ProjectionStoreRepo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "app_name_projection_store_dev"
 
 config :incident, :event_store, adapter: Incident.EventStore.PostgresAdapter,
   options: [
