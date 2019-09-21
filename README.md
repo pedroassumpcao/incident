@@ -29,12 +29,13 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 ## Roadmap
 
 ### Next Steps
-- [ ] add Mix tasks to set up Postgres for Event Store and Projection Store;
 - [ ] add more commands and events to the example app;
+- [ ] add Mix task to generate Postgres projections;
 - [ ] add error modules;
 - [ ] add Process Managers to orchestrate more complex business logic or side effects, with rollback actions;
 
 ### Done
+- [x] add Mix task to set up Postgres for Event Store;
 - [x] publish version `0.3.0`;
 - [x] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
 - [x] set up Circle CI;
@@ -59,7 +60,7 @@ by adding `incident` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:incident, "~> 0.3.0"}
+    {:incident, "~> 0.4.0"}
   ]
 end
 ```
@@ -151,43 +152,10 @@ Create the application databases running the Ecto mix task:
 mix ecto.create
 ```
 
-Generate the migration to create the table to store the events. You need to specify the repository
-the migration is about because you have more than one Ecto repo:
+Use the Incident Mix task to generate the events table migration, and run the migration:
 
 ```
-mix ecto.gen.migration create_events_table -r AppName.EventStoreRepo
-```
-
-Change the migration module as follow:
-
-```elixir
-defmodule AppName.EventStoreRepo.Migrations.CreateEventsTable do
-  use Ecto.Migration
-
-  def change do
-    create table(:events) do
-      add(:event_id, :binary_id, null: false)
-      add(:aggregate_id, :string, null: false)
-      add(:event_type, :string, null: false)
-      add(:version, :integer, null: false)
-      add(:event_date, :utc_datetime_usec, null: false)
-      add(:event_data, :map, null: false)
-
-      timestamps(type: :utc_datetime_usec)
-    end
-
-    create(index(:events, [:aggregate_id]))
-    create(index(:events, [:event_type]))
-    create(index(:events, [:event_date]))
-    create(index(:events, [:version]))
-    create constraint(:events, :version_must_be_positive, check: "version > 0")
-  end
-end
-```
-
-Run the migration to create the `events` table:
-
-```
+mix incident.postgres.init -r AppName.EventStoreRepo
 mix ecto.migrate
 ```
 
