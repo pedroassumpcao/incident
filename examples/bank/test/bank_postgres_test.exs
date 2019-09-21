@@ -1,5 +1,5 @@
 defmodule BankPostgresTest do
-  use Bank.RepoCase
+  use Bank.RepoCase, async: true
 
   alias Bank.BankAccountCommandHandler
   alias Bank.Commands.{DepositMoney, OpenAccount}
