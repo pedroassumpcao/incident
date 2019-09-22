@@ -109,5 +109,5 @@ jobs:
           command: mix test
       - run:
           name: Dialyzer
-          command: mix dialyzer --halt-exit-status
+          command: mix dialyzer
           no_output_timeout: 30m
