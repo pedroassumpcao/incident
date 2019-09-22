@@ -13,7 +13,7 @@ defmodule Incident.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       dialyzer: [
-        plt_add_apps: [:ex_unit]
+        plt_add_apps: [:eex, :ex_unit, :mix]
       ],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
