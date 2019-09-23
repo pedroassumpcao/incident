@@ -26,31 +26,14 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 * **Event Store** and **Projection Store** are swappable persistence layers to allow different technologies over time;
 * **Projection** can be rebuilt based on the persisted events and on the same Aggregate business logic;
 
-## Roadmap
+## Planned Next Steps
 
-### Next Steps
+The list below is the upcoming enhacements or fixes, it will grow as the library is being developed.
+
 - [ ] add more commands and events to the example app;
 - [ ] add Mix task to generate Postgres projections;
 - [ ] add error modules;
 - [ ] add Process Managers to orchestrate more complex business logic or side effects, with rollback actions;
-
-### Done
-- [x] add Mix task to set up Postgres for Event Store;
-- [x] publish version `0.3.0`;
-- [x] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
-- [x] set up Circle CI;
-- [x] publish version `0.2.0`;
-- [x] move event persistency from aggregates to command handlers;
-- [x] use `Ecto.Schema` event data structure;
-- [x] use `Ecto.Schema` for command data structure;
-- [x] validate commands in the command handlers using command implementation;
-- [x] define behaviour for commands;
-- [x] define a macro for command handlers;
-- [x] define behaviour for event handlers;
-- [x] publish version `0.1.0` to Hex and make repository public;
-- [x] add example application within the library as a reference for newcomers;
-- [x] extract library components from the POC, remove implementation and document the implementation in the `README`;
-- [x] create a **Proof of Concept** that can exercise all library components, implementation and confirm goals;
 
 ## Installation
 
