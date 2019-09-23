@@ -60,7 +60,7 @@ by adding `incident` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:incident, "~> 0.4.0"}
+    {:incident, "~> 0.3.0"}
   ]
 end
 ```

@@ -46,10 +46,10 @@ defmodule Incident.MixProject do
     [
       {:credo, "~> 1.0", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev, :test], runtime: false},
-      {:ecto, "~> 3.2.1"},
-      {:ecto_sql, "~> 3.2.0"},
-      {:ex_doc, "~> 0.21.2", only: :dev, runtime: false},
-      {:excoveralls, "~> 0.11.1", only: :test},
+      {:ecto, "~> 3.2"},
+      {:ecto_sql, "~> 3.2"},
+      {:ex_doc, "~> 0.21", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.11", only: :test},
       {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"}
     ]
