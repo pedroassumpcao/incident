@@ -1,11 +1,17 @@
 use Mix.Config
 
 config :bank, Bank.EventStoreRepo,
-  url: "ecto://postgres:postgres@localhost/bank_event_store_test",
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "bank_event_store_test",
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :bank, Bank.ProjectionStoreRepo,
-  url: "ecto://postgres:postgres@localhost/bank_projection_store_test",
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "bank_projection_store_test",
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :incident, :event_store,

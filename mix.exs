@@ -13,7 +13,7 @@ defmodule Incident.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       dialyzer: [
-        plt_add_apps: [:ex_unit]
+        plt_add_apps: [:eex, :ex_unit, :mix]
       ],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
@@ -45,11 +45,11 @@ defmodule Incident.MixProject do
   defp deps do
     [
       {:credo, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.0.0-rc.6", only: [:dev, :test], runtime: false},
-      {:ecto, "~> 3.1.4"},
-      {:ecto_sql, "~> 3.0"},
-      {:ex_doc, "~> 0.20.2", only: :dev, runtime: false},
-      {:excoveralls, "~> 0.11.1", only: :test},
+      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev, :test], runtime: false},
+      {:ecto, "~> 3.2"},
+      {:ecto_sql, "~> 3.2"},
+      {:ex_doc, "~> 0.21", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.11", only: :test},
       {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"}
     ]
@@ -71,7 +71,7 @@ defmodule Incident.MixProject do
         "credo --strict",
         "format --check-formatted",
         "coveralls",
-        "dialyzer --halt-exit-status"
+        "dialyzer"
       ],
       test: ["ecto.create --quiet", "ecto.migrate", "test"]
     ]

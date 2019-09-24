@@ -14,8 +14,7 @@ defmodule Bank.RepoCase do
 
   use ExUnit.CaseTemplate
 
-  alias Bank.EventStoreRepo
-  alias Bank.ProjectionStoreRepo
+  alias Bank.{EventStoreRepo, ProjectionStoreRepo}
   alias Ecto.Adapters.SQL.Sandbox
   alias Ecto.Changeset
 

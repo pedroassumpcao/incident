@@ -26,30 +26,14 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 * **Event Store** and **Projection Store** are swappable persistence layers to allow different technologies over time;
 * **Projection** can be rebuilt based on the persisted events and on the same Aggregate business logic;
 
-## Roadmap
+## Planned Next Steps
 
-### Next Steps
-- [ ] add Mix tasks to set up Postgres for Event Store and Projection Store;
+The list below is the upcoming enhacements or fixes, it will grow as the library is being developed.
+
 - [ ] add more commands and events to the example app;
+- [ ] add Mix task to generate Postgres projections;
 - [ ] add error modules;
 - [ ] add Process Managers to orchestrate more complex business logic or side effects, with rollback actions;
-
-### Done
-- [x] publish version `0.3.0`;
-- [x] add Postgres as an option for event and projection storage via a built-in Ecto Adapter;
-- [x] set up Circle CI;
-- [x] publish version `0.2.0`;
-- [x] move event persistency from aggregates to command handlers;
-- [x] use `Ecto.Schema` event data structure;
-- [x] use `Ecto.Schema` for command data structure;
-- [x] validate commands in the command handlers using command implementation;
-- [x] define behaviour for commands;
-- [x] define a macro for command handlers;
-- [x] define behaviour for event handlers;
-- [x] publish version `0.1.0` to Hex and make repository public;
-- [x] add example application within the library as a reference for newcomers;
-- [x] extract library components from the POC, remove implementation and document the implementation in the `README`;
-- [x] create a **Proof of Concept** that can exercise all library components, implementation and confirm goals;
 
 ## Installation
 
@@ -122,9 +106,17 @@ config :app_name, ecto_repos: [AppName.EventStoreRepo, AppName.ProjectionStoreRe
 In your application `dev|test|prod.exs`:
 
 ```elixir
-config :app_name, AppName.EventStoreRepo, url: "ecto://postgres:postgres@localhost/app_name_event_store_dev"
+config :app_name, AppName.EventStoreRepo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "app_name_event_store_dev"
 
-config :app_name, AppName.ProjectionStoreRepo, url: "ecto://postgres:postgres@localhost/app_name_projection_store_dev"
+config :app_name, AppName.ProjectionStoreRepo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "app_name_projection_store_dev"
 
 config :incident, :event_store, adapter: Incident.EventStore.PostgresAdapter,
   options: [
@@ -143,43 +135,10 @@ Create the application databases running the Ecto mix task:
 mix ecto.create
 ```
 
-Generate the migration to create the table to store the events. You need to specify the repository
-the migration is about because you have more than one Ecto repo:
+Use the Incident Mix task to generate the events table migration, and run the migration:
 
 ```
-mix ecto.gen.migration create_events_table -r AppName.EventStoreRepo
-```
-
-Change the migration module as follow:
-
-```elixir
-defmodule AppName.EventStoreRepo.Migrations.CreateEventsTable do
-  use Ecto.Migration
-
-  def change do
-    create table(:events) do
-      add(:event_id, :binary_id, null: false)
-      add(:aggregate_id, :string, null: false)
-      add(:event_type, :string, null: false)
-      add(:version, :integer, null: false)
-      add(:event_date, :utc_datetime_usec, null: false)
-      add(:event_data, :map, null: false)
-
-      timestamps(type: :utc_datetime_usec)
-    end
-
-    create(index(:events, [:aggregate_id]))
-    create(index(:events, [:event_type]))
-    create(index(:events, [:event_date]))
-    create(index(:events, [:version]))
-    create constraint(:events, :version_must_be_positive, check: "version > 0")
-  end
-end
-```
-
-Run the migration to create the `events` table:
-
-```
+mix incident.postgres.init -r AppName.EventStoreRepo
 mix ecto.migrate
 ```
 

@@ -1,4 +1,4 @@
-defmodule Bank.EventStoreRepo.Migrations.AddEventsTable do
+defmodule Bank.EventStoreRepo.Migrations.CreateEventsTable do
   use Ecto.Migration
 
   def change do
@@ -17,6 +17,6 @@ defmodule Bank.EventStoreRepo.Migrations.AddEventsTable do
     create(index(:events, [:event_type]))
     create(index(:events, [:event_date]))
     create(index(:events, [:version]))
-    create constraint(:events, :version_must_be_positive, check: "version > 0")
+    create(constraint(:events, :version_must_be_positive, check: "version > 0"))
   end
 end

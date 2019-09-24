@@ -20,9 +20,9 @@ jobs:
       - restore_cache:
           name: Restoring Mix Cache
           keys:
-            - incident-v1-mix-cache-{{ checksum "mix.lock" }}-{{ .Branch }}
-            - incident-v1-mix-cache-{{ checksum "mix.lock" }}
-            - incident-v1-mix-cache
+            - incident-v2-mix-cache-{{ checksum "mix.lock" }}-{{ .Branch }}
+            - incident-v2-mix-cache-{{ checksum "mix.lock" }}
+            - incident-v2-mix-cache
       - run:
           name: Install Hex
           command: mix local.hex --force
@@ -37,7 +37,7 @@ jobs:
           command: mix deps.compile
       - save_cache:
           name: Saving Mix Cache
-          key: incident-v1-mix-cache-{{ checksum "mix.lock" }}-{{ .Branch }}
+          key: incident-v2-mix-cache-{{ checksum "mix.lock" }}-{{ .Branch }}
           paths:
             - ~/.mix
             - ~/.cache/rebar3/hex/default
@@ -45,7 +45,7 @@ jobs:
             - deps
       - save_cache:
           name: Saving Mix Cache
-          key: incident-v1-mix-cache-{{ checksum "mix.lock" }}
+          key: incident-v2-mix-cache-{{ checksum "mix.lock" }}
           paths:
             - ~/.mix
             - ~/.cache/rebar3/hex/default
@@ -53,7 +53,7 @@ jobs:
             - deps
       - save_cache:
           name: Saving Mix Cache
-          key: incident-v1-mix-cache
+          key: incident-v2-mix-cache
           paths:
             - ~/.mix
             - ~/.cache/rebar3/hex/default
@@ -65,27 +65,27 @@ jobs:
       - restore_cache:
           name: Restoring Dialyzer PLT Cache
           keys:
-            - incident-v1-dialyzer-plt-cache-{{ checksum "mix.lock" }}-{{ .Branch }}
-            - incident-v1-dialyzer-plt-cache-{{ checksum "mix.lock" }}
-            - incident-v1-dialyzer-plt-cache
+            - incident-v2-dialyzer-plt-cache-{{ checksum "mix.lock" }}-{{ .Branch }}
+            - incident-v2-dialyzer-plt-cache-{{ checksum "mix.lock" }}
+            - incident-v2-dialyzer-plt-cache
       - run:
           name: Build Dialyzer PLT
           command: mix dialyzer --plt
       - save_cache:
           name: Saving Dialyzer PLT Cache
-          key: incident-v1-dialyzer-plt-cache-{{ checksum "mix.lock" }}-{{ .Branch }}
+          key: incident-v2-dialyzer-plt-cache-{{ checksum "mix.lock" }}-{{ .Branch }}
           paths:
             - ~/.mix
             - _build
       - save_cache:
           name: Saving Dialyzer PLT Cache
-          key: incident-v1-dialyzer-plt-cache-{{ checksum "mix.lock" }}
+          key: incident-v2-dialyzer-plt-cache-{{ checksum "mix.lock" }}
           paths:
             - ~/.mix
             - _build
       - save_cache:
           name: Saving Dialyzer PLT Cache
-          key: incident-v1-dialyzer-plt-cache
+          key: incident-v2-dialyzer-plt-cache
           paths:
             - ~/.mix
             - _build
@@ -109,5 +109,5 @@ jobs:
           command: mix test
       - run:
           name: Dialyzer
-          command: mix dialyzer --halt-exit-status
+          command: mix dialyzer
           no_output_timeout: 30m
