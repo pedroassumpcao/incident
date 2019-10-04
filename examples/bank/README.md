@@ -123,6 +123,32 @@ defmodule Bank.Commands.DepositMoney do
     |> Map.get(:valid?)
   end
 end
+
+defmodule Bank.Commands.WithdrawMoney do
+  @behaviour Incident.Command
+
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  @primary_key false
+  embedded_schema do
+    field(:aggregate_id, :string)
+    field(:amount, :integer)
+  end
+
+  @required_fields ~w(aggregate_id amount)a
+
+  @impl true
+  def valid?(command) do
+    data = Map.from_struct(command)
+
+    %__MODULE__{}
+    |> cast(data, @required_fields)
+    |> validate_required(@required_fields)
+    |> validate_number(:amount, greater_than: 0)
+    |> Map.get(:valid?)
+  end
+end
 ```
 
 #### Events
@@ -143,6 +169,17 @@ end
 
 defmodule Bank.Events.MoneyDeposited do
   defstruct [:aggregate_id, :amount, :version]
+end
+
+defmodule Bank.Events.MoneyWithdrawn do
+  use Ecto.Schema
+
+  @primary_key false
+  embedded_schema do
+    field(:aggregate_id, :string)
+    field(:amount, :integer)
+    field(:version, :integer)
+  end
 end
 ```
 
@@ -170,8 +207,8 @@ defmodule Bank.BankAccount do
   @behaviour Incident.Aggregate
 
   alias Bank.BankAccountState
-  alias Bank.Commands.{DepositMoney, OpenAccount}
-  alias Bank.Events.{AccountOpened, MoneyDeposited}
+  alias Bank.Commands.{DepositMoney, OpenAccount, WithdrawMoney}
+  alias Bank.Events.{AccountOpened, MoneyDeposited, MoneyWithdrawn}
 
   @impl true
   def execute(%OpenAccount{account_number: account_number}) do
@@ -185,7 +222,7 @@ defmodule Bank.BankAccount do
 
         {:ok, new_event, state}
 
-      _ ->
+      _state ->
         {:error, :account_already_opened}
     end
   end
@@ -202,8 +239,26 @@ defmodule Bank.BankAccount do
 
         {:ok, new_event, state}
 
-      _ ->
+      %{aggregate_id: nil} ->
         {:error, :account_not_found}
+    end
+  end
+
+  @impl true
+  def execute(%WithdrawMoney{aggregate_id: aggregate_id, amount: amount}) do
+    with %{aggregate_id: aggregate_id} = state when not is_nil(aggregate_id) <-
+           BankAccountState.get(aggregate_id),
+         true <- state.balance >= amount do
+      new_event = %MoneyWithdrawn{
+        aggregate_id: aggregate_id,
+        amount: amount,
+        version: state.version + 1
+      }
+
+      {:ok, new_event, state}
+    else
+      %{aggregate_id: nil} -> {:error, :account_not_found}
+      false -> {:error, :no_enough_balance}
     end
   end
 
@@ -224,6 +279,16 @@ defmodule Bank.BankAccount do
     %{
       state
       | balance: state.balance + event.event_data["amount"],
+        version: event.version,
+        updated_at: event.event_date
+    }
+  end
+
+  @impl true
+  def apply(%{event_type: "MoneyWithdrawn"} = event, state) do
+    %{
+      state
+      | balance: state.balance - event.event_data["amount"],
         version: event.version,
         updated_at: event.event_date
     }
@@ -297,6 +362,22 @@ defmodule Bank.EventHandler do
 
     ProjectionStore.project(BankAccount, data)
   end
+
+  @impl true
+  def listen(%{event_type: "MoneyWithdrawn"} = event, state) do
+    new_state = Aggregate.apply(event, state)
+
+    data = %{
+      aggregate_id: new_state.aggregate_id,
+      account_number: new_state.account_number,
+      balance: new_state.balance,
+      version: event.version,
+      event_id: event.event_id,
+      event_date: event.event_date
+    }
+
+    ProjectionStore.project(BankAccount, data)
+  end
 end
 ```
 
@@ -342,20 +423,29 @@ iex 1 > command_open = %Bank.Commands.OpenAccount{account_number: "abc"}
 iex 2 > command_deposit = %Bank.Commands.DepositMoney{aggregate_id: "abc", amount: 100}
 %Bank.Commands.DepositMoney{aggregate_id: "abc", amount: 100}
 
+# Create a command to withdraw money for an aggregate
+iex 3 > command_withdraw = %Bank.Commands.WithdrawMoney{aggregate_id: "abc", amount: 125}
+%Bank.Commands.WithdrawMoney{aggregate_id: "abc", amount: 25}
+
 # Successful commands being executed
-iex 3 > Bank.BankAccountCommandHandler.receive(command_open)
-:ok
-iex 4 > Bank.BankAccountCommandHandler.receive(command_deposit)
+iex 4 > Bank.BankAccountCommandHandler.receive(command_open)
 :ok
 iex 5 > Bank.BankAccountCommandHandler.receive(command_deposit)
 :ok
+iex 6 > Bank.BankAccountCommandHandler.receive(command_deposit)
+:ok
+iex 7 > Bank.BankAccountCommandHandler.receive(command_withdraw)
+:ok
 
 # Commands are executed in the aggregate business logic, and can generate business logic errors
-iex 6 > Bank.BankAccountCommandHandler.receive(command_open)
+iex 8 > Bank.BankAccountCommandHandler.receive(command_open)
 {:error, :account_already_open}
 
+iex 9 > Bank.BankAccountCommandHandler.receive(command_withdraw)
+{:error, :no_enough_balance}
+
 # Fetching all events for a specific aggregate
-iex 7 > Incident.EventStore.get("abc")
+iex 10 > Incident.EventStore.get("abc")
 [
   %Incident.EventStore.PostgresEvent{
     aggregate_id: "abc",
@@ -380,19 +470,27 @@ iex 7 > Incident.EventStore.get("abc")
     event_id: "39233",
     event_type: "MoneyDeposited",
     version: 3
+  },
+  %Incident.EventStore.PostgresEvent{
+    aggregate_id: "abc",
+    event_data: %{aggregate_id: "abc", amount: 125, version: 4},
+    event_date: #DateTime<2019-05-20 21:19:38.826434Z>,
+    event_id: "93756",
+    event_type: "MoneyWihdrawn",
+    version: 4
   }
 ]
 
 # Reading from the Projection Store
-iex 8 > Incident.ProjectionStore.all(Bank.Projections.BankAccount)
+iex 11 > Incident.ProjectionStore.all(Bank.Projections.BankAccount)
 [
   %Bank.Projections.BankAccount{
     account_number: "abc",
     aggregate_id: "abc",
-    balance: 200,
-    event_date: #DateTime<2019-05-20 21:19:01.726610Z>,
-    event_id: "39233",
-    version: 3
+    balance: 75,
+    event_date: #DateTime<2019-05-20 21:19:38.826434Z>,
+    event_id: "93756",
+    version: 4
   }
 ]
 ```
