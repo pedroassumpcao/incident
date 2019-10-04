@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. The format 
 
 - Add `mix incident.postgres.init` mix task to set up `Postgres` as Event Store storage;
 - Update package dependencies;
+- Add `WithdrawMoney` command, `MoneyWithdrawn` event, and business logic in the bank example application;
 
 ## [0.3.0] — 2019-09-14
 
