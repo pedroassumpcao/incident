@@ -30,10 +30,8 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 
 The list below is the upcoming enhacements or fixes, it will grow as the library is being developed.
 
-- [ ] add more commands and events to the example app;
-- [ ] add Mix task to generate Postgres projections;
-- [ ] add error modules;
 - [ ] add Process Managers to orchestrate more complex business logic or side effects, with rollback actions;
+- [ ] add error modules;
 
 ## Installation
 
