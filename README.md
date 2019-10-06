@@ -7,7 +7,7 @@ Special thanks to my friend [Paulo Gonzalez](https://github.com/pdgonzalez872) f
 ## Goals
 
 * incentivize the usage of **Event Sourcing** and **CQRS** as good choice for domains that can leverage the main benefits of this design pattern;
-* serve as guidance when using Event Sourcing in your system;
+* serve as guidance when using Event Sourcing in your system with proper contracts;
 * leverage functions and reducers for executing commands and applying events;
 * allow customization for fine-grained needs without compromising the principles;
 
@@ -30,8 +30,9 @@ In a nutshell, Event Sourcing ensures that all changes to application state are 
 
 The list below is the upcoming enhacements or fixes, it will grow as the library is being developed.
 
+- [ ] run migrations when using `mix incident.postgres.init` for `Postgres` adapter;
 - [ ] add Process Managers to orchestrate more complex business logic or side effects, with rollback actions;
-- [ ] add error modules;
+- [ ] add error modules and incorporate as part of the contract in some components;
 
 ## Installation
 
@@ -41,7 +42,7 @@ by adding `incident` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:incident, "~> 0.3.0"}
+    {:incident, "~> 0.4.0"}
   ]
 end
 ```
