@@ -6,7 +6,7 @@ defmodule Incident.MixProject do
   def project do
     [
       app: :incident,
-      version: "0.4.1",
+      version: "0.5.0",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       build_embedded: Mix.env() == :prod,
