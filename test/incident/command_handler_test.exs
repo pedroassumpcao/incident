@@ -56,8 +56,8 @@ defmodule Incident.CommandHandlerTest do
   @aggregate_id UUID.generate()
 
   describe "receive/1" do
-    test "returns `:ok` if the command is successfully executed" do
-      assert :ok =
+    test "returns `{:ok, event}` if the command is successfully executed" do
+      assert {:ok, _event} =
                CounterCommandHandler.receive(%AddCounter{
                  aggregate_id: @aggregate_id,
                  amount: 1,
