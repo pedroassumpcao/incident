@@ -2,9 +2,36 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [0.5.0] - 2020-09-10
+
+### Added
+
+#### Bank Example Application
+
+- Add `Transfer`, `TransferCommandhandler`, `TransferState` and `TransferEventHandler` to
+demonstrate an example of **aggregate root** use-case;
+- Add examples of events that can generate specific commands in `TransferEventHandler` to
+demonstrate sequence of Event -> Command -> Event use-cases;
+
+### Changed
+
+#### Library
+
+- The `CommandHandler` now returns `{:ok, persisted_event}` instead of just `:ok`, allowing event
+handlers to compose a new command and call the `CommandHandler` based on the previous event. This
+allows a series of command/event to be built;
+- Update package dependencies;
+
+#### Bank Example Application
+
+- `Bank.EventHandler` was renamed to `Bank.BankAccountEventHandler` to make it clear that this
+handler is only for the `BankAccount` aggregate events as now we have more than one aggregate;
+
 ## [0.4.1] - 2020-06-18
 
 ### Changed
+
+#### Library
 
 - Update package dependencies;
 
@@ -12,10 +39,17 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 
+#### Library
+
 - Add `mix incident.postgres.init` mix task to set up `Postgres` as Event Store storage;
-- Add `WithdrawMoney` command, `MoneyWithdrawn` event, and business logic in the bank example application;
+
+#### Bank Example Application
+
+- Add `WithdrawMoney` command, `MoneyWithdrawn` event, and business logic;
 
 ### Changed
+
+#### Library
 
 - Update package dependencies;
 
@@ -23,21 +57,33 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 
+#### Library
+
 - Add `Postgres` adapter for events;
 - Add `Postgres` adapter for projections;
 - Set up continuous integration with Circle CI;
-- Add integration tests for `InMemoryAdapter` in the bank example application;
-- Add integration tests for `PostgresAdapter` in the bank example application;
+
+#### Bank Example Application
+
+- Add integration tests for `InMemoryAdapter`;
+- Add integration tests for `PostgresAdapter`;
 
 ### Changed
 
+#### Library
+
 - Specify separate event data structures for `InMemoryAdapter` and `PostgresAdapter`;
-- Use `PostgresAdapter` in the bank example application as default;
-- Update bank example application readme file;
+
+#### Bank Example Application
+
+- Use `PostgresAdapter` as default;
+- Update readme file;
 
 ## [0.2.0] — 2019-07-16
 
 ### Added
+
+#### Library
 
 - Define the `Incident.Command` behaviour to specify the command interface;
 - Define the `Incident.CommandHandler` macro for command handlers;
@@ -47,10 +93,14 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Changed
 
+#### Library
+
 - Move event persistency from aggregates to command handlers;
 - Validate commands in the command handlers using command implementation;
 
 ## [0.1.0] — 2019-06-19
+
+#### Library
 
 - Initial release with base functionality with In Memory adapters;
 - Initial release for the bank example application;
