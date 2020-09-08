@@ -23,5 +23,5 @@ config :incident, :event_store,
 config :incident, :projection_store,
   adapter: Incident.ProjectionStore.InMemoryAdapter,
   options: [
-    initial_state: %{Bank.Projections.BankAccount => []}
+    initial_state: %{Bank.Projections.BankAccount => [], Bank.Projections.Transfer => []}
   ]
