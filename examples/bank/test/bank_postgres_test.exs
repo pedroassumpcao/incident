@@ -1,9 +1,9 @@
 defmodule BankPostgresTest do
   use Bank.RepoCase, async: true
 
-  alias Bank.BankAccountCommandHandler
-  alias Bank.Commands.{DepositMoney, OpenAccount, WithdrawMoney}
-  alias Bank.Projections.BankAccount
+  alias Bank.{BankAccountCommandHandler, TransferCommandHandler}
+  alias Bank.Commands.{DepositMoney, InitiateTransfer, OpenAccount, WithdrawMoney}
+  alias Bank.Projections.{BankAccount, Transfer}
   alias Ecto.UUID
 
   setup do
@@ -33,12 +33,44 @@ defmodule BankPostgresTest do
   end
 
   @account_number UUID.generate()
+  @account_number2 UUID.generate()
   @command_open_account %OpenAccount{account_number: @account_number}
   @command_deposit_money %DepositMoney{aggregate_id: @account_number, amount: 100}
   @command_withdraw_money %WithdrawMoney{aggregate_id: @account_number, amount: 100}
+  @transfer_id UUID.generate()
+  @command_initiate_transfer %InitiateTransfer{
+    aggregate_id: @transfer_id,
+    source_account_number: @account_number,
+    destination_account_number: @account_number2,
+    amount: 50
+  }
+
+  test "executes an initiate transfer command" do
+    assert {:ok, _event} = TransferCommandHandler.receive(@command_initiate_transfer)
+
+    assert [event] = Incident.EventStore.get(@transfer_id)
+
+    assert event.aggregate_id == @transfer_id
+    assert event.event_type == "TransferInitiated"
+    assert event.event_id
+    assert event.event_date
+    assert is_map(event.event_data)
+    assert event.version == 1
+
+    assert [transfer] = Incident.ProjectionStore.all(Transfer)
+
+    assert transfer.aggregate_id == @transfer_id
+    assert transfer.source_account_number == @account_number
+    assert transfer.destination_account_number == @account_number2
+    assert transfer.amount == 50
+    assert transfer.status == "initiated"
+    assert transfer.version == 1
+    assert transfer.event_date
+    assert transfer.event_id
+  end
 
   test "executes an open account command" do
-    assert :ok = BankAccountCommandHandler.receive(@command_open_account)
+    assert {:ok, _event} = BankAccountCommandHandler.receive(@command_open_account)
 
     assert [event] = Incident.EventStore.get(@account_number)
 
@@ -60,7 +92,7 @@ defmodule BankPostgresTest do
   end
 
   test "invalid commands don't generate new events" do
-    assert :ok = BankAccountCommandHandler.receive(@command_open_account)
+    assert {:ok, _event} = BankAccountCommandHandler.receive(@command_open_account)
 
     assert {:error, :account_already_opened} =
              BankAccountCommandHandler.receive(@command_open_account)
@@ -85,9 +117,9 @@ defmodule BankPostgresTest do
   end
 
   test "executes an open account and deposit money commands" do
-    assert :ok = BankAccountCommandHandler.receive(@command_open_account)
-    assert :ok = BankAccountCommandHandler.receive(@command_deposit_money)
-    assert :ok = BankAccountCommandHandler.receive(@command_deposit_money)
+    assert {:ok, _event} = BankAccountCommandHandler.receive(@command_open_account)
+    assert {:ok, _event} = BankAccountCommandHandler.receive(@command_deposit_money)
+    assert {:ok, _event} = BankAccountCommandHandler.receive(@command_deposit_money)
 
     assert [event1, event2, event3] = Incident.EventStore.get(@account_number)
 
@@ -128,9 +160,9 @@ defmodule BankPostgresTest do
   end
 
   test "executes an open account, deposit and withdraw money commands" do
-    assert :ok = BankAccountCommandHandler.receive(@command_open_account)
-    assert :ok = BankAccountCommandHandler.receive(@command_deposit_money)
-    assert :ok = BankAccountCommandHandler.receive(@command_withdraw_money)
+    assert {:ok, _event} = BankAccountCommandHandler.receive(@command_open_account)
+    assert {:ok, _event} = BankAccountCommandHandler.receive(@command_deposit_money)
+    assert {:ok, _event} = BankAccountCommandHandler.receive(@command_withdraw_money)
 
     assert [event1, event2, event3] = Incident.EventStore.get(@account_number)
 
@@ -166,7 +198,7 @@ defmodule BankPostgresTest do
   end
 
   test "doees not withdraw more money than bank account balance" do
-    assert :ok = BankAccountCommandHandler.receive(@command_open_account)
+    assert {:ok, _event} = BankAccountCommandHandler.receive(@command_open_account)
 
     assert {:error, :no_enough_balance} =
              BankAccountCommandHandler.receive(@command_withdraw_money)
