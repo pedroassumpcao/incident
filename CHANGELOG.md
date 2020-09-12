@@ -20,12 +20,14 @@ demonstrate sequence of Event -> Command -> Event use-cases;
 - The `CommandHandler` now returns `{:ok, persisted_event}` instead of just `:ok`, allowing event
 handlers to compose a new command and call the `CommandHandler` based on the previous event. This
 allows a series of command/event to be built;
+- Set Elixir minimum version to 1.8;
 - Update package dependencies;
 
 #### Bank Example Application
 
 - `Bank.EventHandler` was renamed to `Bank.BankAccountEventHandler` to make it clear that this
 handler is only for the `BankAccount` aggregate events as now we have more than one aggregate;
+- Set Elixir minimum version to 1.8;
 
 ## [0.4.1] - 2020-06-18
 
