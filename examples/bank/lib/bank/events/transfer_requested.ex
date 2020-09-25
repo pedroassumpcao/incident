@@ -1,4 +1,4 @@
-defmodule Bank.Events.TransferInitiated do
+defmodule Bank.Events.TransferRequested do
   use Ecto.Schema
 
   @primary_key false

@@ -1,6 +1,6 @@
-defmodule Bank.Commands.InitiateTransfer do
+defmodule Bank.Commands.RequestTransfer do
   @moduledoc """
-  Initiate Transfer command using `Ecto.Schema` and `Ecto.Changeset` to define and validate fields.
+  Request Transfer command using `Ecto.Schema` and `Ecto.Changeset` to define and validate fields.
   """
 
   @behaviour Incident.Command

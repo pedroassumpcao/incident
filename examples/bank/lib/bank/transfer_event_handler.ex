@@ -8,7 +8,7 @@ defmodule Bank.TransferEventHandler do
   alias Incident.ProjectionStore
 
   @impl true
-  def listen(%{event_type: "TransferInitiated"} = event, state) do
+  def listen(%{event_type: "TransferRequested"} = event, state) do
     new_state = Aggregate.apply(event, state)
 
     data = %{
@@ -53,6 +53,21 @@ defmodule Bank.TransferEventHandler do
     }
 
     {:ok, _projected_event} = ProjectionStore.project(Transfer, data)
+
+    # %ReceiveMoney{
+    #   aggregate_id: new_state.destination_account_number,
+    #   transfer_id: new_state.aggregate_id,
+    #   amount: new_state.amount
+    # }
+    # |> BankAccountCommandHandler.receive()
+    # |> case do
+    #   {:ok, %{event_type: "MoneyReceived"}} ->
+    #     %ProcessTransfer{aggregate_id: new_state.aggregate_id}
+
+    #   _event ->
+    #     %CancelTransfer{aggregate_id: new_state.aggregate_id}
+    # end
+    # |> TransferCommandHandler.receive()
   end
 
   @impl true

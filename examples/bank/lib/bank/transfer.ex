@@ -2,14 +2,14 @@ defmodule Bank.Transfer do
   @behaviour Incident.Aggregate
 
   alias Bank.TransferState
-  alias Bank.Commands.{CancelTransfer, InitiateTransfer, ProcessTransfer}
-  alias Bank.Events.{TransferCancelled, TransferInitiated, TransferProcessed}
+  alias Bank.Commands.{CancelTransfer, ProcessTransfer, RequestTransfer}
+  alias Bank.Events.{TransferCancelled, TransferProcessed, TransferRequested}
 
   @impl true
-  def execute(%InitiateTransfer{aggregate_id: aggregate_id} = command) do
+  def execute(%RequestTransfer{aggregate_id: aggregate_id} = command) do
     case TransferState.get(aggregate_id) do
       %{aggregate_id: nil} = state ->
-        new_event = %TransferInitiated{
+        new_event = %TransferRequested{
           aggregate_id: aggregate_id,
           source_account_number: command.source_account_number,
           destination_account_number: command.destination_account_number,
@@ -27,7 +27,7 @@ defmodule Bank.Transfer do
   @impl true
   def execute(%ProcessTransfer{aggregate_id: aggregate_id}) do
     case TransferState.get(aggregate_id) do
-      %{aggregate_id: aggregate_id, status: "initiated"} = state when not is_nil(aggregate_id) ->
+      %{aggregate_id: aggregate_id, status: "requested"} = state when not is_nil(aggregate_id) ->
         new_event = %TransferProcessed{aggregate_id: aggregate_id, version: state.version + 1}
         {:ok, new_event, state}
 
@@ -42,7 +42,7 @@ defmodule Bank.Transfer do
   @impl true
   def execute(%CancelTransfer{aggregate_id: aggregate_id}) do
     case TransferState.get(aggregate_id) do
-      %{aggregate_id: aggregate_id, status: "initiated"} = state when not is_nil(aggregate_id) ->
+      %{aggregate_id: aggregate_id, status: "requested"} = state when not is_nil(aggregate_id) ->
         new_event = %TransferCancelled{aggregate_id: aggregate_id, version: state.version + 1}
         {:ok, new_event, state}
 
@@ -55,14 +55,14 @@ defmodule Bank.Transfer do
   end
 
   @impl true
-  def apply(%{event_type: "TransferInitiated"} = event, state) do
+  def apply(%{event_type: "TransferRequested"} = event, state) do
     %{
       state
       | aggregate_id: event.aggregate_id,
         source_account_number: event.event_data["source_account_number"],
         destination_account_number: event.event_data["destination_account_number"],
         amount: event.event_data["amount"],
-        status: "initiated",
+        status: "requested",
         version: event.version,
         updated_at: event.event_date
     }
