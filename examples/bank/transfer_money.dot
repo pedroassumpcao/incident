@@ -1,0 +1,19 @@
+digraph TransferMoney {
+        node [shape=circle]
+        Start
+
+        node [shape=box color=green style=filled];
+        TransferRequested TransferInitiated TransferCompleted TransferReverted TransferCancelled
+
+        node [color=gray]
+
+        Start -> TransferRequested;
+        TransferRequested -> MoneySent [label=SendMoney];
+        MoneySent -> TransferInitiated [label=ok];
+        MoneySent -> TransferCancelled [label=error];
+        TransferInitiated -> MoneyReceived [label=ReceiveMoney];
+        MoneyReceived -> TransferCompleted [label=ok];
+        MoneyReceived -> TransferReverted [label=error];
+        TransferReverted -> MoneySentReverted [label=RevertMoneySent];
+        MoneySentReverted -> TransferCancelled;
+}
