@@ -2,7 +2,7 @@ defmodule BankInMemoryTest do
   use ExUnit.Case
 
   alias Bank.{BankAccountCommandHandler, TransferCommandHandler}
-  alias Bank.Commands.{DepositMoney, InitiateTransfer, OpenAccount, WithdrawMoney}
+  alias Bank.Commands.{DepositMoney, OpenAccount, RequestTransfer, WithdrawMoney}
   alias Bank.Projections.{BankAccount, Transfer}
   alias Ecto.UUID
 
@@ -14,46 +14,12 @@ defmodule BankInMemoryTest do
     end)
   end
 
+  @default_amount 100
   @account_number UUID.generate()
   @account_number2 UUID.generate()
   @command_open_account %OpenAccount{account_number: @account_number}
-  @command_deposit_money %DepositMoney{aggregate_id: @account_number, amount: 100}
-  @command_withdraw_money %WithdrawMoney{aggregate_id: @account_number, amount: 100}
-  @transfer_id UUID.generate()
-  @command_initiate_transfer %InitiateTransfer{
-    aggregate_id: @transfer_id,
-    source_account_number: @account_number,
-    destination_account_number: @account_number2,
-    amount: 50
-  }
-
-  describe "transfering money from one account to another" do
-    test "executes an initiate transfer command" do
-      assert {:ok, _event} = BankAccountCommandHandler.receive(@command_open_account)
-      assert {:ok, _event} = BankAccountCommandHandler.receive(@command_deposit_money)
-      assert {:ok, _event} = TransferCommandHandler.receive(@command_initiate_transfer)
-
-      assert [event1, event2] = Incident.EventStore.get(@transfer_id)
-
-      assert event1.aggregate_id == @transfer_id
-      assert event1.event_type == "TransferInitiated"
-      assert event1.event_id
-      assert event1.event_date
-      assert is_map(event1.event_data)
-      assert event1.version == 1
-
-      assert [transfer] = Incident.ProjectionStore.all(Transfer)
-
-      assert transfer.aggregate_id == @transfer_id
-      assert transfer.source_account_number == @account_number
-      assert transfer.destination_account_number == @account_number2
-      assert transfer.amount == 50
-      assert transfer.status == "processed"
-      assert transfer.version == 2
-      assert transfer.event_date
-      assert transfer.event_id
-    end
-  end
+  @command_deposit_money %DepositMoney{aggregate_id: @account_number, amount: @default_amount}
+  @command_withdraw_money %WithdrawMoney{aggregate_id: @account_number, amount: @default_amount}
 
   describe "simple bank account operations" do
     test "successfully opening a bank account" do
@@ -135,7 +101,7 @@ defmodule BankInMemoryTest do
 
       assert bank_account.aggregate_id == @account_number
       assert bank_account.account_number == @account_number
-      assert bank_account.balance == 200
+      assert bank_account.balance == @default_amount * 2
       assert bank_account.version == 3
       assert bank_account.event_date
       assert bank_account.event_id
@@ -212,6 +178,52 @@ defmodule BankInMemoryTest do
     test "failing on attempt to withdraw money from a non-existing account" do
       assert {:error, :account_not_found} =
                BankAccountCommandHandler.receive(@command_withdraw_money)
+    end
+  end
+
+  describe "transfering money from one account to another" do
+    @transfer_id UUID.generate()
+    @command_request_transfer %RequestTransfer{
+      aggregate_id: @transfer_id,
+      source_account_number: @account_number,
+      destination_account_number: @account_number2,
+      amount: @default_amount
+    }
+
+    setup do
+      BankAccountCommandHandler.receive(@command_open_account)
+      BankAccountCommandHandler.receive(@command_deposit_money)
+      BankAccountCommandHandler.receive(%{@command_open_account | account_number: @account_number2})
+
+      :ok
+    end
+
+    test "transfer money from account to another when there is enough balance" do
+      assert {:ok, _event} = TransferCommandHandler.receive(@command_request_transfer)
+
+      assert [event1, event2] = Incident.EventStore.get(@transfer_id)
+
+      assert event1.aggregate_id == @transfer_id
+      assert event1.event_type == "TransferRequested"
+      assert event1.event_id
+      assert event1.event_date
+      assert is_map(event1.event_data)
+      assert event1.version == 1
+
+      assert [transfer] = Incident.ProjectionStore.all(Transfer)
+
+      assert transfer.aggregate_id == @transfer_id
+      assert transfer.source_account_number == @account_number
+      assert transfer.destination_account_number == @account_number2
+      assert transfer.amount == @default_amount
+      assert transfer.status == "processed"
+      assert transfer.version == 2
+      assert transfer.event_date
+      assert transfer.event_id
+
+      assert [bank_account1, bank_account2] = Incident.ProjectionStore.all(BankAccount)
+      assert bank_account1.balance == 0
+      assert bank_account2.balance == @default_amount
     end
   end
 end
