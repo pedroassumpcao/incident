@@ -201,7 +201,7 @@ defmodule BankInMemoryTest do
     test "transfer money from account to another when there is enough balance" do
       assert {:ok, _event} = TransferCommandHandler.receive(@command_request_transfer)
 
-      assert [event1, event2] = Incident.EventStore.get(@transfer_id)
+      assert [event1, event2, event3] = Incident.EventStore.get(@transfer_id)
 
       assert event1.aggregate_id == @transfer_id
       assert event1.event_type == "TransferRequested"
@@ -217,7 +217,7 @@ defmodule BankInMemoryTest do
       assert transfer.destination_account_number == @account_number2
       assert transfer.amount == @default_amount
       assert transfer.status == "completed"
-      assert transfer.version == 2
+      assert transfer.version == 3
       assert transfer.event_date
       assert transfer.event_id
 

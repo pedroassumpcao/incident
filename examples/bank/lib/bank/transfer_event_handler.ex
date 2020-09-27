@@ -2,7 +2,7 @@ defmodule Bank.TransferEventHandler do
   @behaviour Incident.EventHandler
 
   alias Bank.{BankAccountCommandHandler, TransferCommandHandler}
-  alias Bank.Commands.{CancelTransfer, CompleteTransfer, SendMoney}
+  alias Bank.Commands.{CancelTransfer, CompleteTransfer, InitiateTransfer, SendMoney}
   alias Bank.Projections.Transfer
   alias Bank.Transfer, as: Aggregate
   alias Incident.ProjectionStore
@@ -32,12 +32,44 @@ defmodule Bank.TransferEventHandler do
     |> BankAccountCommandHandler.receive()
     |> case do
       {:ok, %{event_type: "MoneySent"}} ->
-        %CompleteTransfer{aggregate_id: new_state.aggregate_id}
+        %InitiateTransfer{aggregate_id: new_state.aggregate_id}
 
       _event ->
         %CancelTransfer{aggregate_id: new_state.aggregate_id}
     end
     |> TransferCommandHandler.receive()
+  end
+
+  @impl true
+  def listen(%{event_type: "TransferInitiated"} = event, state) do
+    new_state = Aggregate.apply(event, state)
+
+    data = %{
+      aggregate_id: new_state.aggregate_id,
+      status: new_state.status,
+      version: event.version,
+      event_id: event.event_id,
+      event_date: event.event_date
+    }
+
+    {:ok, _projected_event} = ProjectionStore.project(Transfer, data)
+
+    %CompleteTransfer{aggregate_id: new_state.aggregate_id}
+    |> TransferCommandHandler.receive()
+    # %ReceiveMoney{
+    #   aggregate_id: new_state.destination_account_number,
+    #   transfer_id: new_state.aggregate_id,
+    #   amount: new_state.amount
+    # }
+    # |> BankAccountCommandHandler.receive()
+    # |> case do
+    #   {:ok, %{event_type: "MoneyReceived"}} ->
+    #     %ProcessTransfer{aggregate_id: new_state.aggregate_id}
+
+    #   _event ->
+    #     %CancelTransfer{aggregate_id: new_state.aggregate_id}
+    # end
+    # |> TransferCommandHandler.receive()
   end
 
   @impl true
@@ -53,21 +85,6 @@ defmodule Bank.TransferEventHandler do
     }
 
     {:ok, _projected_event} = ProjectionStore.project(Transfer, data)
-
-    # %ReceiveMoney{
-    #   aggregate_id: new_state.destination_account_number,
-    #   transfer_id: new_state.aggregate_id,
-    #   amount: new_state.amount
-    # }
-    # |> BankAccountCommandHandler.receive()
-    # |> case do
-    #   {:ok, %{event_type: "MoneyReceived"}} ->
-    #     %ProcessTransfer{aggregate_id: new_state.aggregate_id}
-
-    #   _event ->
-    #     %CancelTransfer{aggregate_id: new_state.aggregate_id}
-    # end
-    # |> TransferCommandHandler.receive()
   end
 
   @impl true
