@@ -221,9 +221,12 @@ defmodule BankInMemoryTest do
       assert transfer.event_date
       assert transfer.event_id
 
-      assert [bank_account1, bank_account2] = Incident.ProjectionStore.all(BankAccount)
-      assert bank_account1.balance == 0
-      assert bank_account2.balance == @default_amount
+      bank_accounts = Incident.ProjectionStore.all(BankAccount)
+      source_bank_account = Enum.find(bank_accounts, & &1.aggregate_id == @account_number)
+      destination_bank_account = Enum.find(bank_accounts, & &1.aggregate_id == @account_number2)
+
+      assert source_bank_account.balance == 0
+      assert destination_bank_account.balance == @default_amount
     end
 
     test "does not transfer money when there is no enough balance" do
