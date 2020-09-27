@@ -1,4 +1,4 @@
-defmodule Bank.Events.TransferProcessed do
+defmodule Bank.Events.TransferCompleted do
   use Ecto.Schema
 
   @primary_key false

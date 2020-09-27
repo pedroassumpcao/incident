@@ -216,7 +216,7 @@ defmodule BankInMemoryTest do
       assert transfer.source_account_number == @account_number
       assert transfer.destination_account_number == @account_number2
       assert transfer.amount == @default_amount
-      assert transfer.status == "processed"
+      assert transfer.status == "completed"
       assert transfer.version == 2
       assert transfer.event_date
       assert transfer.event_id
@@ -224,6 +224,37 @@ defmodule BankInMemoryTest do
       assert [bank_account1, bank_account2] = Incident.ProjectionStore.all(BankAccount)
       assert bank_account1.balance == 0
       assert bank_account2.balance == @default_amount
+    end
+
+    test "does not transfer money when there is no enough balance" do
+      over_amount = @default_amount + 1
+      assert {:ok, _event} = TransferCommandHandler.receive(%{@command_request_transfer | amount: over_amount})
+
+      assert [event1, event2] = Incident.EventStore.get(@transfer_id)
+
+      assert event2.aggregate_id == @transfer_id
+      assert event2.event_type == "TransferCancelled"
+      assert event2.event_id
+      assert event2.event_date
+      assert is_map(event2.event_data)
+      assert event2.version == 2
+
+      assert [transfer] = Incident.ProjectionStore.all(Transfer)
+
+      assert transfer.aggregate_id == @transfer_id
+      assert transfer.source_account_number == @account_number
+      assert transfer.destination_account_number == @account_number2
+      assert transfer.amount == @default_amount + 1
+      assert transfer.status == "cancelled"
+      assert transfer.version == 2
+      assert transfer.event_date
+      assert transfer.event_id
+
+      bank_accounts = Incident.ProjectionStore.all(BankAccount)
+      source_bank_account = Enum.find(bank_accounts, & &1.aggregate_id == @account_number)
+      destination_bank_account = Enum.find(bank_accounts, & &1.aggregate_id == @account_number2)
+      assert source_bank_account.balance == @default_amount
+      assert destination_bank_account.balance == 0
     end
   end
 end

@@ -1,6 +1,6 @@
-defmodule Bank.Commands.ProcessTransfer do
+defmodule Bank.Commands.CompleteTransfer do
   @moduledoc """
-  Process Transfer command using `Ecto.Schema` and `Ecto.Changeset` to define and validate fields.
+  Complete Transfer command using `Ecto.Schema` and `Ecto.Changeset` to define and validate fields.
   """
 
   @behaviour Incident.Command

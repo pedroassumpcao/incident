@@ -2,7 +2,7 @@ defmodule Bank.TransferEventHandler do
   @behaviour Incident.EventHandler
 
   alias Bank.{BankAccountCommandHandler, TransferCommandHandler}
-  alias Bank.Commands.{CancelTransfer, ProcessTransfer, SendMoney}
+  alias Bank.Commands.{CancelTransfer, CompleteTransfer, SendMoney}
   alias Bank.Projections.Transfer
   alias Bank.Transfer, as: Aggregate
   alias Incident.ProjectionStore
@@ -32,7 +32,7 @@ defmodule Bank.TransferEventHandler do
     |> BankAccountCommandHandler.receive()
     |> case do
       {:ok, %{event_type: "MoneySent"}} ->
-        %ProcessTransfer{aggregate_id: new_state.aggregate_id}
+        %CompleteTransfer{aggregate_id: new_state.aggregate_id}
 
       _event ->
         %CancelTransfer{aggregate_id: new_state.aggregate_id}
@@ -41,7 +41,7 @@ defmodule Bank.TransferEventHandler do
   end
 
   @impl true
-  def listen(%{event_type: "TransferProcessed"} = event, state) do
+  def listen(%{event_type: "TransferCompleted"} = event, state) do
     new_state = Aggregate.apply(event, state)
 
     data = %{
