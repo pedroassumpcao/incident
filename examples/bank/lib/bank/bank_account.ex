@@ -2,8 +2,8 @@ defmodule Bank.BankAccount do
   @behaviour Incident.Aggregate
 
   alias Bank.BankAccountState
-  alias Bank.Commands.{DepositMoney, OpenAccount, SendMoney, WithdrawMoney}
-  alias Bank.Events.{AccountOpened, MoneyDeposited, MoneySent, MoneyWithdrawn}
+  alias Bank.Commands.{DepositMoney, OpenAccount, ReceiveMoney, SendMoney, WithdrawMoney}
+  alias Bank.Events.{AccountOpened, MoneyDeposited, MoneyReceived, MoneySent, MoneyWithdrawn}
 
   @impl true
   def execute(%OpenAccount{account_number: account_number}) do
@@ -77,6 +77,23 @@ defmodule Bank.BankAccount do
   end
 
   @impl true
+  def execute(%ReceiveMoney{aggregate_id: aggregate_id, amount: amount} = command) do
+    case BankAccountState.get(aggregate_id) do
+      %{aggregate_id: aggregate_id} = state when not is_nil(aggregate_id) ->
+        new_event = %MoneyReceived{
+          aggregate_id: aggregate_id,
+          amount: amount,
+          version: state.version + 1
+        }
+
+        {:ok, new_event, state}
+
+      %{aggregate_id: nil} ->
+        {:error, :account_not_found}
+    end
+  end
+
+  @impl true
   def apply(%{event_type: "AccountOpened"} = event, state) do
     %{
       state
@@ -113,6 +130,16 @@ defmodule Bank.BankAccount do
     %{
       state
       | balance: state.balance - event.event_data["amount"],
+        version: event.version,
+        updated_at: event.event_date
+    }
+  end
+
+  @impl true
+  def apply(%{event_type: "MoneyReceived"} = event, state) do
+    %{
+      state
+      | balance: state.balance + event.event_data["amount"],
         version: event.version,
         updated_at: event.event_date
     }
