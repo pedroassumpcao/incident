@@ -2,7 +2,7 @@ defmodule Bank.TransferEventHandler do
   @behaviour Incident.EventHandler
 
   alias Bank.{BankAccountCommandHandler, TransferCommandHandler}
-  alias Bank.Commands.{CancelTransfer, CompleteTransfer, InitiateTransfer, ReceiveMoney, RevertTransfer, SendMoney}
+  alias Bank.Commands.{CancelTransfer, CompleteTransfer, InitiateTransfer, ReceiveMoney, RevertMoneySent, RevertTransfer, SendMoney}
   alias Bank.Projections.Transfer
   alias Bank.Transfer, as: Aggregate
   alias Incident.ProjectionStore
@@ -83,6 +83,16 @@ defmodule Bank.TransferEventHandler do
     }
 
     {:ok, _projected_event} = ProjectionStore.project(Transfer, data)
+
+    %RevertMoneySent{
+      aggregate_id: new_state.source_account_number,
+      transfer_id: new_state.aggregate_id,
+      amount: new_state.amount
+    }
+    |> BankAccountCommandHandler.receive()
+
+    %CancelTransfer{aggregate_id: new_state.aggregate_id}
+    |> TransferCommandHandler.receive()
   end
 
   @impl true

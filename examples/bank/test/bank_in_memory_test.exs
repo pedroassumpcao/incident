@@ -293,14 +293,14 @@ defmodule BankInMemoryTest do
       unexisting_account = UUID.generate()
       assert {:ok, _event} = TransferCommandHandler.receive(%{@command_request_transfer | destination_account_number: unexisting_account})
 
-      assert [event1, event2, event3] = Incident.EventStore.get(@transfer_id)
+      assert [event1, event2, event3, event4] = Incident.EventStore.get(@transfer_id)
 
-      assert event3.aggregate_id == @transfer_id
-      assert event3.event_type == "TransferReverted"
-      assert event3.event_id
-      assert event3.event_date
-      assert is_map(event3.event_data)
-      assert event3.version == 3
+      assert event4.aggregate_id == @transfer_id
+      assert event4.event_type == "TransferCancelled"
+      assert event4.event_id
+      assert event4.event_date
+      assert is_map(event4.event_data)
+      assert event4.version == 4
 
       assert [transfer] = Incident.ProjectionStore.all(Transfer)
 
@@ -308,14 +308,14 @@ defmodule BankInMemoryTest do
       assert transfer.source_account_number == @account_number
       assert transfer.destination_account_number == unexisting_account
       assert transfer.amount == @default_amount
-      assert transfer.status == "reverted"
-      assert transfer.version == 3
+      assert transfer.status == "cancelled"
+      assert transfer.version == 4
       assert transfer.event_date
       assert transfer.event_id
 
       bank_accounts = Incident.ProjectionStore.all(BankAccount)
       source_bank_account = Enum.find(bank_accounts, & &1.aggregate_id == @account_number)
-      assert source_bank_account.balance == 0
+      assert source_bank_account.balance == @default_amount
     end
   end
 end
