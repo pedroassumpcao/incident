@@ -6,11 +6,53 @@ defmodule BankInMemoryTest do
   alias Bank.Projections.{BankAccount, Transfer}
   alias Ecto.UUID
 
+  # This setup is only needed becasue we are testing another storage adapter than the configured for
+  # documentation sake. This usually wouldn't happen in a real application.
   setup do
+    :ok = Application.stop(:bank)
+    :ok = Application.stop(:incident)
+
+    projection_store_config = [
+      adapter: Incident.ProjectionStore.InMemoryAdapter,
+      options: [
+        initial_state: %{Bank.Projections.BankAccount => [], Bank.Projections.Transfer => []}
+      ]
+    ]
+
+    event_store_config = [
+      adapter: Incident.EventStore.InMemoryAdapter,
+      options: [
+        initial_state: []
+      ]
+    ]
+
+    Application.put_env(:incident, :projection_store, projection_store_config)
+    Application.put_env(:incident, :event_store, event_store_config)
+    {:ok, _apps} = Application.ensure_all_started(:incident)
+    {:ok, _apps} = Application.ensure_all_started(:bank)
+
     on_exit(fn ->
+      :ok = Application.stop(:bank)
       :ok = Application.stop(:incident)
 
+      projection_store_config = [
+        adapter: Incident.ProjectionStore.PostgresAdapter,
+        options: [
+          repo: Bank.ProjectionStoreRepo
+        ]
+      ]
+
+      event_store_config = [
+        adapter: Incident.EventStore.PostgresAdapter,
+        options: [
+          repo: Bank.EventStoreRepo
+        ]
+      ]
+
+      Application.put_env(:incident, :projection_store, projection_store_config)
+      Application.put_env(:incident, :event_store, event_store_config)
       {:ok, _apps} = Application.ensure_all_started(:incident)
+      {:ok, _apps} = Application.ensure_all_started(:bank)
     end)
   end
 

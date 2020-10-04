@@ -11,15 +11,3 @@ config :bank, Bank.ProjectionStoreRepo,
   password: "postgres",
   hostname: "localhost",
   database: "bank_projection_store_dev"
-
-config :incident, :event_store,
-  adapter: Incident.EventStore.PostgresAdapter,
-  options: [
-    repo: Bank.EventStoreRepo
-  ]
-
-config :incident, :projection_store,
-  adapter: Incident.ProjectionStore.PostgresAdapter,
-  options: [
-    repo: Bank.ProjectionStoreRepo
-  ]

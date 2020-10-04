@@ -14,16 +14,4 @@ config :bank, Bank.ProjectionStoreRepo,
   database: "bank_projection_store_test",
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :incident, :event_store,
-  adapter: Incident.EventStore.InMemoryAdapter,
-  options: [
-    initial_state: []
-  ]
-
-config :incident, :projection_store,
-  adapter: Incident.ProjectionStore.InMemoryAdapter,
-  options: [
-    initial_state: %{Bank.Projections.BankAccount => [], Bank.Projections.Transfer => []}
-  ]
-
 config :logger, level: :error
