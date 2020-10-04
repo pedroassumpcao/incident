@@ -2,7 +2,17 @@ defmodule Bank.TransferEventHandler do
   @behaviour Incident.EventHandler
 
   alias Bank.{BankAccountCommandHandler, TransferCommandHandler}
-  alias Bank.Commands.{CancelTransfer, CompleteTransfer, InitiateTransfer, ReceiveMoney, RevertMoneySent, RevertTransfer, SendMoney}
+
+  alias Bank.Commands.{
+    CancelTransfer,
+    CompleteTransfer,
+    InitiateTransfer,
+    ReceiveMoney,
+    RevertMoneySent,
+    RevertTransfer,
+    SendMoney
+  }
+
   alias Bank.Projections.Transfer
   alias Bank.Transfer, as: Aggregate
   alias Incident.ProjectionStore

@@ -211,7 +211,11 @@ defmodule BankPostgresTest do
     setup do
       BankAccountCommandHandler.receive(@command_open_account)
       BankAccountCommandHandler.receive(@command_deposit_money)
-      BankAccountCommandHandler.receive(%{@command_open_account | account_number: @account_number2})
+
+      BankAccountCommandHandler.receive(%{
+        @command_open_account
+        | account_number: @account_number2
+      })
 
       :ok
     end
@@ -240,8 +244,8 @@ defmodule BankPostgresTest do
       assert transfer.event_id
 
       bank_accounts = Incident.ProjectionStore.all(BankAccount)
-      source_bank_account = Enum.find(bank_accounts, & &1.aggregate_id == @account_number)
-      destination_bank_account = Enum.find(bank_accounts, & &1.aggregate_id == @account_number2)
+      source_bank_account = Enum.find(bank_accounts, &(&1.aggregate_id == @account_number))
+      destination_bank_account = Enum.find(bank_accounts, &(&1.aggregate_id == @account_number2))
 
       assert source_bank_account.balance == 0
       assert destination_bank_account.balance == @default_amount
@@ -249,7 +253,9 @@ defmodule BankPostgresTest do
 
     test "does not transfer money when there is no enough balance" do
       over_amount = @default_amount + 1
-      assert {:ok, _event} = TransferCommandHandler.receive(%{@command_request_transfer | amount: over_amount})
+
+      assert {:ok, _event} =
+               TransferCommandHandler.receive(%{@command_request_transfer | amount: over_amount})
 
       assert [event1, event2] = Incident.EventStore.get(@transfer_id)
 
@@ -272,15 +278,20 @@ defmodule BankPostgresTest do
       assert transfer.event_id
 
       bank_accounts = Incident.ProjectionStore.all(BankAccount)
-      source_bank_account = Enum.find(bank_accounts, & &1.aggregate_id == @account_number)
-      destination_bank_account = Enum.find(bank_accounts, & &1.aggregate_id == @account_number2)
+      source_bank_account = Enum.find(bank_accounts, &(&1.aggregate_id == @account_number))
+      destination_bank_account = Enum.find(bank_accounts, &(&1.aggregate_id == @account_number2))
       assert source_bank_account.balance == @default_amount
       assert destination_bank_account.balance == 0
     end
 
     test "does not transfer money when source account does not exist" do
       unexisting_account = UUID.generate()
-      assert {:ok, _event} = TransferCommandHandler.receive(%{@command_request_transfer | source_account_number: unexisting_account})
+
+      assert {:ok, _event} =
+               TransferCommandHandler.receive(%{
+                 @command_request_transfer
+                 | source_account_number: unexisting_account
+               })
 
       assert [event1, event2] = Incident.EventStore.get(@transfer_id)
 
@@ -303,13 +314,18 @@ defmodule BankPostgresTest do
       assert transfer.event_id
 
       bank_accounts = Incident.ProjectionStore.all(BankAccount)
-      destination_bank_account = Enum.find(bank_accounts, & &1.aggregate_id == @account_number2)
+      destination_bank_account = Enum.find(bank_accounts, &(&1.aggregate_id == @account_number2))
       assert destination_bank_account.balance == 0
     end
 
     test "does not transfer money when destination account does not exist" do
       unexisting_account = UUID.generate()
-      assert {:ok, _event} = TransferCommandHandler.receive(%{@command_request_transfer | destination_account_number: unexisting_account})
+
+      assert {:ok, _event} =
+               TransferCommandHandler.receive(%{
+                 @command_request_transfer
+                 | destination_account_number: unexisting_account
+               })
 
       assert [event1, event2, event3, event4] = Incident.EventStore.get(@transfer_id)
 
@@ -332,7 +348,7 @@ defmodule BankPostgresTest do
       assert transfer.event_id
 
       bank_accounts = Incident.ProjectionStore.all(BankAccount)
-      source_bank_account = Enum.find(bank_accounts, & &1.aggregate_id == @account_number)
+      source_bank_account = Enum.find(bank_accounts, &(&1.aggregate_id == @account_number))
       assert source_bank_account.balance == @default_amount
     end
   end

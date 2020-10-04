@@ -2,8 +2,24 @@ defmodule Bank.BankAccount do
   @behaviour Incident.Aggregate
 
   alias Bank.BankAccountState
-  alias Bank.Commands.{DepositMoney, OpenAccount, ReceiveMoney, RevertMoneySent, SendMoney, WithdrawMoney}
-  alias Bank.Events.{AccountOpened, MoneyDeposited, MoneyReceived, MoneySent, MoneySentReverted, MoneyWithdrawn}
+
+  alias Bank.Commands.{
+    DepositMoney,
+    OpenAccount,
+    ReceiveMoney,
+    RevertMoneySent,
+    SendMoney,
+    WithdrawMoney
+  }
+
+  alias Bank.Events.{
+    AccountOpened,
+    MoneyDeposited,
+    MoneyReceived,
+    MoneySent,
+    MoneySentReverted,
+    MoneyWithdrawn
+  }
 
   @impl true
   def execute(%OpenAccount{account_number: account_number}) do
@@ -60,7 +76,7 @@ defmodule Bank.BankAccount do
   @impl true
   def execute(%SendMoney{aggregate_id: aggregate_id, amount: amount} = command) do
     with %{aggregate_id: aggregate_id} = state when not is_nil(aggregate_id) <-
-         BankAccountState.get(aggregate_id),
+           BankAccountState.get(aggregate_id),
          true <- state.balance >= amount do
       new_event = %MoneySent{
         aggregate_id: aggregate_id,

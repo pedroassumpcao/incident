@@ -2,8 +2,22 @@ defmodule Bank.Transfer do
   @behaviour Incident.Aggregate
 
   alias Bank.TransferState
-  alias Bank.Commands.{CancelTransfer, CompleteTransfer, InitiateTransfer, RequestTransfer, RevertTransfer}
-  alias Bank.Events.{TransferCancelled, TransferCompleted, TransferInitiated, TransferRequested, TransferReverted}
+
+  alias Bank.Commands.{
+    CancelTransfer,
+    CompleteTransfer,
+    InitiateTransfer,
+    RequestTransfer,
+    RevertTransfer
+  }
+
+  alias Bank.Events.{
+    TransferCancelled,
+    TransferCompleted,
+    TransferInitiated,
+    TransferRequested,
+    TransferReverted
+  }
 
   @impl true
   def execute(%RequestTransfer{aggregate_id: aggregate_id} = command) do
@@ -72,7 +86,8 @@ defmodule Bank.Transfer do
   @impl true
   def execute(%CancelTransfer{aggregate_id: aggregate_id}) do
     case TransferState.get(aggregate_id) do
-      %{aggregate_id: aggregate_id, status: status} = state when not is_nil(aggregate_id) and status in ["requested", "reverted"] ->
+      %{aggregate_id: aggregate_id, status: status} = state
+      when not is_nil(aggregate_id) and status in ["requested", "reverted"] ->
         new_event = %TransferCancelled{aggregate_id: aggregate_id, version: state.version + 1}
         {:ok, new_event, state}
 
