@@ -63,8 +63,8 @@ defmodule Bank.BankAccount do
          BankAccountState.get(aggregate_id),
          true <- state.balance >= amount do
       new_event = %MoneySent{
-             aggregate_id: aggregate_id,
-             transfer_id: command.transfer_id,
+        aggregate_id: aggregate_id,
+        transfer_id: command.transfer_id,
         amount: amount,
         version: state.version + 1
       }
@@ -82,6 +82,7 @@ defmodule Bank.BankAccount do
       %{aggregate_id: aggregate_id} = state when not is_nil(aggregate_id) ->
         new_event = %MoneyReceived{
           aggregate_id: aggregate_id,
+          transfer_id: command.transfer_id,
           amount: amount,
           version: state.version + 1
         }
@@ -99,6 +100,7 @@ defmodule Bank.BankAccount do
       %{aggregate_id: aggregate_id} = state when not is_nil(aggregate_id) ->
         new_event = %MoneySentReverted{
           aggregate_id: aggregate_id,
+          transfer_id: command.transfer_id,
           amount: amount,
           version: state.version + 1
         }
