@@ -25,3 +25,5 @@ config :incident, :projection_store,
   options: [
     initial_state: %{Bank.Projections.BankAccount => [], Bank.Projections.Transfer => []}
   ]
+
+config :logger, level: :error
