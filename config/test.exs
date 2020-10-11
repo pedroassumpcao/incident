@@ -21,3 +21,5 @@ config :incident, Incident.ProjectionStore.TestRepo,
 config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter
 
 config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter
+
+config :logger, level: :error
