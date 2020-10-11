@@ -14,4 +14,9 @@ defmodule Incident.ProjectionStore.Adapter do
   Returns all projections from a specific projection type from the Projection Store.
   """
   @callback all(module) :: list
+
+  @doc """
+  Returns a projection record from a specific projection type from the Projection Store.
+  """
+  @callback get(module, String.t()) :: struct | nil
 end

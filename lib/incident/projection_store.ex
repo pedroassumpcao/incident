@@ -15,6 +15,11 @@ defmodule Incident.ProjectionStore do
     apply(adapter(), :all, [projection_name])
   end
 
+  @doc false
+  def get(projection_name, aggregate_id) do
+    apply(adapter(), :get, [projection_name, aggregate_id])
+  end
+
   @spec adapter :: module
   defp adapter do
     Application.get_env(:incident, :projection_store)[:adapter]

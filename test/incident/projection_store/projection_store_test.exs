@@ -62,4 +62,17 @@ defmodule Incident.ProjectionStoreTest do
       refute ProjectionStore.all(Incident)
     end
   end
+
+  describe "get/2" do
+    test "returns the aggregate projection when found" do
+      assert {:ok, %{aggregate_id: "123456", amount: 1}} =
+               ProjectionStore.project(:counters, %{aggregate_id: "123456", amount: 1})
+
+      assert %{aggregate_id: "123456", amount: 1} = ProjectionStore.get(:counters, "123456")
+    end
+
+    test "returns nil when aggregate is not found in the projection" do
+      refute ProjectionStore.get(:counters, "123456")
+    end
+  end
 end
