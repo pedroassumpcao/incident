@@ -28,7 +28,7 @@ defmodule Incident.MixProject do
       package: package(),
       source_url: @github,
       homepage_url: @github,
-      description: "Event Sourcing and CQRS abstractions."
+      description: "Event Sourcing and CQRS building blocks."
     ]
   end
 
