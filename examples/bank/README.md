@@ -4,48 +4,37 @@ Example application using **Incident** for Event Sourcing and CQRS.
 
 ## Getting Started
 
-As an implementation example, a **Bank** application that allow few commands, to **open an account** and to **deposit money into an account**.
-If the commands can be executed, based on the aggregate business logic, the events are stored and broadcasted to an event handler that will project them.
+As an implementation example, a **Bank** application that allow few commands, such as to **open an account**, to **deposit money into an account**, **transfer money from one account to another**, and so on. If the commands can be executed, based on the aggregate logic, the events are stored and broadcasted to an event handler that will project them.
 
 ### Implementation
 
-The implementation below is what we have currently in this example application:
+The implementation below is what we currently have in this example application:
 
 ### Event Store and Projection Store Setup
 
 Configure `incident` **Event Store** and **Projection Store** adapters and its options. The options will be used during the adapter initialization.
 
-There are two options for persistency and the adapter configuration follows below:
+#### Postgres Adapter Configuration
 
-#### In Memory Adapter
+The Postgres Adapter uses `Ecto`, so we need some Ecto configuration as well some configuration that will
+define the database repositories for both Event Store and Projection Store.
 
-This is simply a quick option to be used as a playground to exercise the library but it is not
-suppose to be used in a real application as the data will be wiped out every time the application starts.
-
-The Event Store will start as an empty list (no events), and the Projection Store will have an empty list of bank accounts as the only projection:
-
-```elixir
-config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter,
-  options: [
-    initial_state: []
-]
-
-config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter,
-  options: [
-    initial_state: %{Bank.Projections.BankAccount => []}
-]
-```
-
-#### Postgres Adapter
-
-In the case of using the Postgres Adapter, that uses `Ecto` behind the scenes, we need some extra
-configuration that is identical to any configuration for `Ecto`. This example app is already
-configured with this adapter with the following setup:
-
-In `config.exs` the repositories are specified:
+In the main `config.exs`:
 
 ```elixir
 config :bank, ecto_repos: [Bank.EventStoreRepo, Bank.ProjectionStoreRepo]
+
+config :incident, :event_store,
+  adapter: Incident.EventStore.PostgresAdapter,
+  options: [
+    repo: Bank.EventStoreRepo
+  ]
+
+config :incident, :projection_store,
+  adapter: Incident.ProjectionStore.PostgresAdapter,
+  options: [
+    repo: Bank.ProjectionStoreRepo
+  ]
 ```
 
 In the application `dev.exs`:
@@ -62,16 +51,6 @@ config :bank, Bank.ProjectionStoreRepo,
   password: "postgres",
   hostname: "localhost",
   database: "bank_projection_store_dev"
-
-config :incident, :event_store, adapter: Incident.EventStore.PostgresAdapter,
-  options: [
-    repo: Bank.EventStoreRepo
-  ]
-
-config :incident, :projection_store, adapter: Incident.ProjectionStore.PostgresAdapter,
-  options: [
-    repo: Bank.ProjectionStoreRepo
-  ]
 ```
 
 Migrations for the events table and the projections are already available but you need to run some
@@ -84,7 +63,7 @@ mix ecto.migrate
 
 #### Commands
 
-Implement the behaviour `Incident.Command`. Below are two examples that demonstrate how commands can be implemented using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas and `Ecto.Changeset` for validations:
+Implement the behaviour `Incident.Command`. Below are two examples that demonstrate how commands can be implemented using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas and `Ecto.Changeset` for validations. It is up to you decide the best approach:
 
 ```elixir
 defmodule Bank.Commands.OpenAccount do
@@ -153,7 +132,7 @@ end
 
 #### Events
 
-Below are two examples that demonstrate how event data structures can be defined using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas. For information only, these data will be used as the `event_data` in the event data structure, but this is handle automatically by Incident:
+Below are two examples that demonstrate how event data structures can be defined using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas. These data will be used as the content of `event_data` field in the persisted event data structure, but this is handle automatically by Incident:
 
 ```elixir
 defmodule Bank.Events.AccountOpened do
@@ -185,7 +164,7 @@ end
 
 #### Command Handler
 
-The **Command Handler** is the entry point in the command model. Its task is receive, validate and exectue the command through the aggregate. If a command is invalid in its structure and basic data, the command handler will reject it, returning a invalid command error.
+The **Command Handler** is the entry point in the command/write model. Its task is to receive, validate and exectue the command through the aggregate. If a command is invalid in its structure and basic data, the command handler will reject it, returning a invalid command error.
 
 ```elixir
 defmodule Bank.BankAccountCommandHandler do
@@ -200,7 +179,7 @@ The aggregate will implement two functions:
 * `execute/1`, it will receive a command and based on the business logic and on the current aggregate state, return a new event or an error;
 * `apply/2`, it will receive an event and an aggregate state, returning the new aggregate state;
 
-The aggregate logic is pure functional, there is no side effects.
+The responsibility of the aggregate is define what has to be done for each command it accepts and each event that can happen around it. The aggregate logic is pure functional, there is no side effects.
 
 ```elixir
 defmodule Bank.BankAccount do
@@ -262,6 +241,10 @@ defmodule Bank.BankAccount do
     end
   end
 
+  # ...
+  # Other command execution implementation.
+  # ...
+
   @impl true
   def apply(%{event_type: "AccountOpened"} = event, state) do
     %{
@@ -294,16 +277,15 @@ defmodule Bank.BankAccount do
     }
   end
 
-  @impl true
-  def apply(_, state) do
-    state
-  end
+  # ...
+  # Other event application implementation.
+  # ...
 end
 ```
 
 #### Aggregate State
 
-The **Aggregate State** is used to accumulate the state of an aggregate after every event applied. It starts the initial state of an aggregate.
+The **Aggregate State** is used to accumulate the state of an aggregate after every event applied. It also defines the initial state of an aggregate.
 
 ```elixir
 defmodule Bank.BankAccountState do
@@ -321,10 +303,10 @@ end
 
 #### Event Handler
 
-The **Event Handler** will define the business logic for every event that happened. The most common it is to project new data to the **Projection Store** but any other side effect could happen here as well.
+The **Event Handler** will define the business logic for every event that happened. The most common it is to project new data to the **Projection Store** but any other side effect could happen here as well, such as compose a new command and send to the Command Handler.
 
 ```elixir
-defmodule Bank.EventHandler do
+defmodule Bank.BankAccountEventHandler do
   @behaviour Incident.EventHandler
 
   alias Bank.Projections.BankAccount
@@ -353,7 +335,6 @@ defmodule Bank.EventHandler do
 
     data = %{
       aggregate_id: new_state.aggregate_id,
-      account_number: new_state.account_number,
       balance: new_state.balance,
       version: event.version,
       event_id: event.event_id,
@@ -369,7 +350,6 @@ defmodule Bank.EventHandler do
 
     data = %{
       aggregate_id: new_state.aggregate_id,
-      account_number: new_state.account_number,
       balance: new_state.balance,
       version: event.version,
       event_id: event.event_id,

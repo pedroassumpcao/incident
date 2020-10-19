@@ -1,14 +1,14 @@
 # Incident
 
-Event Sourcing and CQRS in Elixir abstractions.
+Event Sourcing and CQRS building blocks.
 
 Special thanks to my friend [Paulo Gonzalez](https://github.com/pdgonzalez872) for the name suggestion for this library.
 
 ## Goals
 
 * incentivize the usage of **Event Sourcing** and **CQRS** as good choice for domains that can leverage the main benefits of this design pattern;
-* offer the essential building blocks when using Event Sourcing in your system with proper contracts, allowing specific needs to leverage what Elixir already brings to the table, for example, concurrency;
-* leverage functions and reducers for executing commands and applying events, making it easier to test;
+* offer the essential building blocks for using Event Sourcing in your system with proper contracts, but allowing specific needs to leverage what Elixir already brings to the table, for example, concurrency;
+* leverage functions and reducers for executing commands and applying events, facilitating stateless tests;
 * allow customization for fine-grained needs without compromising the principles;
 
 ## Event Sourcing and CQRS
