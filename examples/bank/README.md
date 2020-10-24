@@ -1,18 +1,25 @@
-# Bank
+# Bank Application
 
 Example application using **Incident** for Event Sourcing and CQRS.
 
 ## Getting Started
 
-As an implementation example, a **Bank** application that allow few commands, such as to **open an account**, to **deposit money into an account**, **transfer money from one account to another**, and so on. If the commands can be executed, based on the aggregate logic, the events are stored and broadcasted to an event handler that will project them.
+As an implementation example, a **Bank** application that allow few commands, such as to **open an
+account**, to **deposit money into an account**, **transfer money from one account to another**, and so on.
+If the commands can be executed, based on the aggregate logic, the events are stored and broadcasted to an
+event handler that will project them.
 
 ### Implementation
 
-The implementation below is what we currently have in this example application:
+The code snippets below are only part of what we currently have in this example application. There are many
+more commands, events, aggregates and handlers. The integration tests in this application contains many
+details of all allowed operations and it is a very good place to understand how the application impelements
+Event Sourcing using Incident.
 
 ### Event Store and Projection Store Setup
 
-Configure `incident` **Event Store** and **Projection Store** adapters and its options. The options will be used during the adapter initialization.
+Configure `incident` **Event Store** and **Projection Store** adapters and its options. The options will
+be used during the adapter initialization.
 
 #### Postgres Adapter Configuration
 
@@ -63,7 +70,9 @@ mix ecto.migrate
 
 #### Commands
 
-Implement the behaviour `Incident.Command`. Below are two examples that demonstrate how commands can be implemented using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas and `Ecto.Changeset` for validations. It is up to you decide the best approach:
+Implement the behaviour `Incident.Command`. Below are two examples that demonstrate how commands can be
+implemented using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas and
+`Ecto.Changeset` for validations. It is up to you decide the best approach:
 
 ```elixir
 defmodule Bank.Commands.OpenAccount do
@@ -132,7 +141,9 @@ end
 
 #### Events
 
-Below are two examples that demonstrate how event data structures can be defined using basic Elixir structs or leveraging `Ecto.Schema` with embedded schemas. These data will be used as the content of `event_data` field in the persisted event data structure, but this is handle automatically by Incident:
+Below are two examples that demonstrate how event data structures can be defined using basic Elixir structs
+or leveraging `Ecto.Schema` with embedded schemas. These data will be used as the content of `event_data`
+field in the persisted event data structure, but this is handle automatically by Incident:
 
 ```elixir
 defmodule Bank.Events.AccountOpened do
@@ -164,7 +175,9 @@ end
 
 #### Command Handler
 
-The **Command Handler** is the entry point in the command/write model. Its task is to receive, validate and exectue the command through the aggregate. If a command is invalid in its structure and basic data, the command handler will reject it, returning a invalid command error.
+The **Command Handler** is the entry point in the command/write model. Its task is to receive, validate and
+exectue the command through the aggregate. If a command is invalid in its structure and basic data, the
+command handler will reject it, returning a invalid command error.
 
 ```elixir
 defmodule Bank.BankAccountCommandHandler do
@@ -176,10 +189,12 @@ end
 
 The aggregate will implement two functions:
 
-* `execute/1`, it will receive a command and based on the business logic and on the current aggregate state, return a new event or an error;
+* `execute/1`, it will receive a command and based on the business logic and on the current aggregate
+state, return a new event or an error;
 * `apply/2`, it will receive an event and an aggregate state, returning the new aggregate state;
 
-The responsibility of the aggregate is define what has to be done for each command it accepts and each event that can happen around it. The aggregate logic is pure functional, there is no side effects.
+The responsibility of the aggregate is define what has to be done for each command it accepts and each
+event that can happen around it. The aggregate logic is pure functional, there is no side effects.
 
 ```elixir
 defmodule Bank.BankAccount do
@@ -285,7 +300,8 @@ end
 
 #### Aggregate State
 
-The **Aggregate State** is used to accumulate the state of an aggregate after every event applied. It also defines the initial state of an aggregate.
+The **Aggregate State** is used to accumulate the state of an aggregate after every event applied.
+It also defines the initial state of an aggregate.
 
 ```elixir
 defmodule Bank.BankAccountState do
@@ -303,7 +319,9 @@ end
 
 #### Event Handler
 
-The **Event Handler** will define the business logic for every event that happened. The most common it is to project new data to the **Projection Store** but any other side effect could happen here as well, such as compose a new command and send to the Command Handler.
+The **Event Handler** will define the business logic for every event that happened. The most common it is
+to project new data to the **Projection Store** but any other side effect could happen here as well, such
+as compose a new command and send to the Command Handler.
 
 ```elixir
 defmodule Bank.BankAccountEventHandler do
@@ -409,13 +427,61 @@ iex 3 > command_withdraw = %Bank.Commands.WithdrawMoney{aggregate_id: "abc", amo
 
 # Successful commands being executed
 iex 4 > Bank.BankAccountCommandHandler.receive(command_open)
-:ok
+{:ok,
+ %Incident.EventStore.PostgresEvent{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "events">,
+   aggregate_id: "abc",
+   event_data: %{"aggregate_id" => "abc", "account_number" => "abc", "version" => 1},
+   event_date: #DateTime<2020-10-24 22:06:48.238223Z>,
+   event_id: "431eb402-f476-44ec-a868-7742d04b5e95",
+   event_type: "AccountCreated",
+   id: 1,
+   inserted_at: #DateTime<2020-10-24 22:06:48.847365Z>,
+   updated_at: #DateTime<2020-10-24 22:06:48.847365Z>,
+   version: 1
+ }}
 iex 5 > Bank.BankAccountCommandHandler.receive(command_deposit)
-:ok
+{:ok,
+ %Incident.EventStore.PostgresEvent{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "events">,
+   aggregate_id: "abc",
+   event_data: %{"aggregate_id" => "abc", "amount" => 100, "version" => 2},
+   event_date: #DateTime<2020-10-24 22:06:49.487129Z>,
+   event_id: "431eb402-f476-44ec-a868-7742d04b5e95",
+   event_type: "MoneyDeposited",
+   id: 2,
+   inserted_at: #DateTime<2020-10-24 22:06:49.491902Z>,
+   updated_at: #DateTime<2020-10-24 22:06:49.491902Z>,
+   version: 2
+ }}
 iex 6 > Bank.BankAccountCommandHandler.receive(command_deposit)
-:ok
+{:ok,
+ %Incident.EventStore.PostgresEvent{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "events">,
+   aggregate_id: "abc",
+   event_data: %{"aggregate_id" => "abc", "amount" => 100, "version" => 3},
+   event_date: #DateTime<2020-10-24 22:09:05.323817Z>,
+   event_id: "81c6ff50-0f23-4046-80e3-4000ce3653d8",
+   event_type: "MoneyDeposited",
+   id: 3,
+   inserted_at: #DateTime<2020-10-24 22:09:05.323944Z>,
+   updated_at: #DateTime<2020-10-24 22:09:05.323944Z>,
+   version: 3
+ }}
 iex 7 > Bank.BankAccountCommandHandler.receive(command_withdraw)
-:ok
+{:ok,
+ %Incident.EventStore.PostgresEvent{
+   __meta__: #Ecto.Schema.Metadata<:loaded, "events">,
+   aggregate_id: "abc",
+   event_data: %{"aggregate_id" => "abc", "amount" => 125, "version" => 4},
+   event_date: #DateTime<2020-10-24 22:09:45.987814Z>,
+   event_id: "bec52025-c7d0-4f33-84ec-76d31aee0454",
+   event_type: "MoneyWithdrawn",
+   id: 4,
+   inserted_at: #DateTime<2020-10-24 22:09:45.987904Z>,
+   updated_at: #DateTime<2020-10-24 22:09:45.987904Z>,
+   version: 4
+ }}
 
 # Commands are executed in the aggregate business logic, and can generate business logic errors
 iex 8 > Bank.BankAccountCommandHandler.receive(command_open)
@@ -428,49 +494,88 @@ iex 9 > Bank.BankAccountCommandHandler.receive(command_withdraw)
 iex 10 > Incident.EventStore.get("abc")
 [
   %Incident.EventStore.PostgresEvent{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "events">,
     aggregate_id: "abc",
-    event_data: %{account_number: "abc", aggregate_id: "abc", version: 1},
-    event_date: #DateTime<2019-05-20 21:18:32.892658Z>,
-    event_id: "94618",
+    event_data: %{
+      "account_number" => "abc",
+      "aggregate_id" => "abc",
+      "version" => 1
+    },
+    event_date: #DateTime<2020-10-20 20:58:13.279033Z>,
+    event_id: "d6b3f6d2-d022-4de0-9b40-6cc13fbd0202",
     event_type: "AccountOpened",
+    id: 1,
+    inserted_at: #DateTime<2020-10-20 20:58:13.284767Z>,
+    updated_at: #DateTime<2020-10-20 20:58:13.284767Z>,
     version: 1
   },
   %Incident.EventStore.PostgresEvent{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "events">,
     aggregate_id: "abc",
-    event_data: %{aggregate_id: "abc", amount: 100, version: 2},
-    event_date: #DateTime<2019-05-20 21:18:46.171031Z>,
-    event_id: "82370",
+    event_data: %{"aggregate_id" => "abc", "amount" => 100, "version" => 2},
+    event_date: #DateTime<2020-10-24 22:06:49.487129Z>,
+    event_id: "431eb402-f476-44ec-a868-7742d04b5e95",
     event_type: "MoneyDeposited",
+    id: 2,
+    inserted_at: #DateTime<2020-10-24 22:06:49.491902Z>,
+    updated_at: #DateTime<2020-10-24 22:06:49.491902Z>,
     version: 2
   },
   %Incident.EventStore.PostgresEvent{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "events">,
     aggregate_id: "abc",
-    event_data: %{aggregate_id: "abc", amount: 100, version: 3},
-    event_date: #DateTime<2019-05-20 21:19:01.726610Z>,
-    event_id: "39233",
+    event_data: %{"aggregate_id" => "abc", "amount" => 100, "version" => 3},
+    event_date: #DateTime<2020-10-24 22:09:05.323817Z>,
+    event_id: "81c6ff50-0f23-4046-80e3-4000ce3653d8",
     event_type: "MoneyDeposited",
+    id: 3,
+    inserted_at: #DateTime<2020-10-24 22:09:05.323944Z>,
+    updated_at: #DateTime<2020-10-24 22:09:05.323944Z>,
     version: 3
   },
   %Incident.EventStore.PostgresEvent{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "events">,
     aggregate_id: "abc",
-    event_data: %{aggregate_id: "abc", amount: 125, version: 4},
-    event_date: #DateTime<2019-05-20 21:19:38.826434Z>,
-    event_id: "93756",
-    event_type: "MoneyWihdrawn",
+    event_data: %{"aggregate_id" => "abc", "amount" => 125, "version" => 4},
+    event_date: #DateTime<2020-10-24 22:09:45.987814Z>,
+    event_id: "bec52025-c7d0-4f33-84ec-76d31aee0454",
+    event_type: "MoneyWithdrawn",
+    id: 4,
+    inserted_at: #DateTime<2020-10-24 22:09:45.987904Z>,
+    updated_at: #DateTime<2020-10-24 22:09:45.987904Z>,
     version: 4
   }
 ]
 
-# Reading from the Projection Store
+# Listing all bank accounts from the Projection Store
 iex 11 > Incident.ProjectionStore.all(Bank.Projections.BankAccount)
 [
   %Bank.Projections.BankAccount{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "bank_accounts">,
     account_number: "abc",
     aggregate_id: "abc",
     balance: 75,
-    event_date: #DateTime<2019-05-20 21:19:38.826434Z>,
-    event_id: "93756",
+    event_date: #DateTime<2020-10-24 22:09:45.987814Z>,
+    event_id: "bec52025-c7d0-4f33-84ec-76d31aee0454",
+    id: 1,
+    inserted_at: #DateTime<2020-10-20 20:58:13.311756Z>,
+    updated_at: #DateTime<2020-10-24 22:09:45.996697Z>,
     version: 4
   }
 ]
+
+# Fetching a specific bank account from the Projection Store based on its aggregate id
+iex 12 > Incident.ProjectionStore.get(Bank.Projections.BankAccount, "abc")
+%Bank.Projections.BankAccount{
+  __meta__: #Ecto.Schema.Metadata<:loaded, "bank_accounts">,
+  account_number: "abc",
+  aggregate_id: "abc",
+  balance: 75,
+  event_date: #DateTime<2020-10-24 22:09:45.987814Z>,
+  event_id: "bec52025-c7d0-4f33-84ec-76d31aee0454",
+  id: 1,
+  inserted_at: #DateTime<2020-10-20 20:58:13.311756Z>,
+  updated_at: #DateTime<2020-10-24 22:09:45.996697Z>,
+  version: 4
+}
 ```
