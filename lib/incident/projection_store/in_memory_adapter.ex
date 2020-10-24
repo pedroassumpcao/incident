@@ -43,4 +43,11 @@ defmodule Incident.ProjectionStore.InMemoryAdapter do
       Map.get(state, projection)
     end)
   end
+
+  @impl true
+  def get(projection, aggregate_id) do
+    projection
+    |> all()
+    |> Enum.find(&(&1.aggregate_id == aggregate_id))
+  end
 end

@@ -6,8 +6,8 @@ defmodule Incident.MixProject do
   def project do
     [
       app: :incident,
-      version: "0.4.1",
-      elixir: "~> 1.7",
+      version: "0.5.0",
+      elixir: "~> 1.8",
       elixirc_paths: elixirc_paths(Mix.env()),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -28,7 +28,7 @@ defmodule Incident.MixProject do
       package: package(),
       source_url: @github,
       homepage_url: @github,
-      description: "Event Sourcing and CQRS abstractions."
+      description: "Event Sourcing and CQRS building blocks."
     ]
   end
 

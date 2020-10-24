@@ -27,7 +27,7 @@ defmodule Incident.CommandHandler do
       - event can't be broadcasted to the Event Handler;
 
       """
-      @spec receive(struct) :: :ok | {:error, atom | struct | String.t()}
+      @spec receive(struct) :: {:ok, struct} | {:error, atom | struct | String.t()}
       def receive(command) do
         command_module = command.__struct__
 
@@ -35,7 +35,7 @@ defmodule Incident.CommandHandler do
              {:ok, new_event, state} <- unquote(aggregate).execute(command),
              {:ok, persisted_event} <- EventStore.append(new_event),
              {:ok, _projected_event} <- unquote(event_handler).listen(persisted_event, state) do
-          :ok
+          {:ok, persisted_event}
         else
           false -> {:error, :invalid_command}
           {:error, _reason} = error -> error

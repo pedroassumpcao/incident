@@ -44,6 +44,11 @@ defmodule Incident.ProjectionStore.PostgresAdapter do
     repo().all(projection)
   end
 
+  @impl Incident.ProjectionStore.Adapter
+  def get(projection, aggregate_id) do
+    repo().get_by(projection, aggregate_id: aggregate_id)
+  end
+
   @spec repo :: module()
   defp repo do
     GenServer.call(__MODULE__, :repo)

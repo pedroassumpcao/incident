@@ -74,4 +74,16 @@ defmodule Incident.ProjectionStore.PostgresAdapterTest do
              ] = PostgresAdapter.all(Counter)
     end
   end
+
+  describe "get/2" do
+    test "returns the aggregate projection when found" do
+      PostgresAdapter.project(Counter, @to_be_projected_data1)
+
+      assert %Counter{aggregate_id: "123456"} = PostgresAdapter.get(Counter, "123456")
+    end
+
+    test "returns nil when aggregate is not found in the projection" do
+      refute PostgresAdapter.get(Counter, "123456")
+    end
+  end
 end
