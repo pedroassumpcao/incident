@@ -8,14 +8,15 @@ All notable changes to this project will be documented in this file. The format 
 
 #### Library
 
-- Add `get/2` for Projection Store `InMemory` and `Postgres` adapters;
+- Add `get/2` for Projection Store `InMemory` and `Postgres` adapters to fetch a projection for a specific
+aggregate;
 
 #### Bank Example Application
 
 - Add `Transfer`, `TransferCommandhandler`, `TransferState` and `TransferEventHandler` to
 demonstrate an example of **aggregate root** use-case;
 - Add examples of events that can generate specific commands in `TransferEventHandler` to
-demonstrate sequence of Event -> Command -> Event use-cases;
+demonstrate sequence of **Event -> Command -> Event** use-cases;
 
 ### Changed
 
@@ -23,7 +24,7 @@ demonstrate sequence of Event -> Command -> Event use-cases;
 
 - The `CommandHandler` now returns `{:ok, persisted_event}` instead of just `:ok`, allowing event
 handlers to compose a new command and call the `CommandHandler` based on the previous event. This
-allows a series of command/event to be built;
+allows a series of **Event -> Command -> Event** to be built;
 - Set Elixir minimum version to 1.8;
 - Update package dependencies;
 
