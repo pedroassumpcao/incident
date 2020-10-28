@@ -74,6 +74,7 @@ Currently, Incident comes with two adapters, an `InMemory` to be used as playgro
 
 The list below is the upcoming enhacements or fixes, it will grow as the library is being developed.
 
+- [ ] add Telemetry module and trigger telemetry events;
 - [ ] run migrations when using `mix incident.postgres.init` for `Postgres` adapter;
 - [ ] add error modules and incorporate as part of the contract in some components;
 
