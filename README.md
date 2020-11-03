@@ -5,6 +5,10 @@ Event Sourcing and CQRS building blocks.
 Special thanks to my friend [Paulo Gonzalez](https://github.com/pdgonzalez872) for the name suggestion
 for this library.
 
+*This library is in constant development phase and evaluation, that means core changes still can be made.*
+*While I am already using Incident in production, please be advised about the risks, once the library
+reaches its maturity, a release 1.x.x will be created.*
+
 ## Goals
 
 * incentivize the usage of **Event Sourcing** and **CQRS** as good choice for domains that can leverage
@@ -74,9 +78,11 @@ Currently, Incident comes with two adapters, an `InMemory` to be used as playgro
 
 The list below is the upcoming enhacements or fixes, it will grow as the library is being developed.
 
+- [ ] allow Incident to be used by more than one application within the umbrella, if needed;
 - [ ] add Telemetry module and trigger telemetry events;
+- [ ] standardize and document approach for dealing with stale commands and/or race conditions;
 - [ ] run migrations when using `mix incident.postgres.init` for `Postgres` adapter;
-- [ ] add error modules and incorporate as part of the contract in some components;
+- [ ] allow custom error modules to be used and incorporate as part of the contract in some components;
 
 ## Installation
 
