@@ -28,13 +28,14 @@ defmodule Incident.EventStore.PostgresAdapter do
 
   @impl Incident.EventStore.Adapter
   def get(aggregate_id) do
-    # credo:disable-for-lines:6
-    from(
-      e in Event,
-      where: e.aggregate_id == ^aggregate_id,
-      order_by: [asc: e.event_date]
-    )
-    |> repo().all()
+    query =
+      from(
+        e in Event,
+        where: e.aggregate_id == ^aggregate_id,
+        order_by: [asc: e.id]
+      )
+
+    repo().all(query)
   end
 
   @impl Incident.EventStore.Adapter
