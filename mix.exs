@@ -48,7 +48,7 @@ defmodule Incident.MixProject do
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:ecto, "~> 3.2"},
       {:ecto_sql, "~> 3.2"},
-      {:ex_doc, "~> 0.21", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.21", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.11", only: :test},
       {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"}

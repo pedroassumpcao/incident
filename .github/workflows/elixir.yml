@@ -1,0 +1,64 @@
+name: Elixir CI
+
+on: push
+
+jobs:
+  all_tests:
+    runs-on: ubuntu-latest
+    env:
+      MIX_ENV: test
+      POSTGRES_HOSTNAME: localhost
+      POSTGRES_DATABASE: incident
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USERNAME: postgres
+    services:
+      postgres:
+        image: postgres:9.6.17-alpine
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: incident
+          POSTGRES_USER: postgres
+        ports:
+        - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 10s --health-retries 10
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup elixir
+        uses: actions/setup-elixir@v1
+        with:
+          elixir-version: 1.11.2
+          otp-version: 23.1.1
+      - name: Retrieve Mix Dependencies Cache
+        uses: actions/cache@v1
+        id: mix-cache
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+      - name: Get Deps
+        if: steps.mix-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
+      - name: Compile Deps
+        run: mix deps.compile
+      - name: Compiler Warnings
+        run: mix compile --force --warnings-as-errors
+      - name: Run Credo
+        run: mix credo --strict
+      - name: Check Format
+        run: mix format --check-formatted
+      - name: Run Coveralls
+        run: mix coveralls --raise
+      - name: Generate Docs
+        run: mix docs --output test/doc
+      - name: Retrieve PLT Cache
+        uses: actions/cache@v1
+        id: plt-cache
+        with:
+          path: priv/plts
+          key: ${{ runner.os }}-plts-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+      - name: Create PLTs
+        if: steps.plt-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p priv/plts
+          mix dialyzer --plt
+      - name: Run Dialyzer
+        run: mix dialyzer --no-check --list-unused-filters
