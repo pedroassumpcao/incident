@@ -179,9 +179,13 @@ The **Command Handler** is the entry point in the command/write model. Its task 
 exectue the command through the aggregate. If a command is invalid in its structure and basic data, the
 command handler will reject it, returning a invalid command error.
 
+The command handler will also broadcast the event to the **Event Handler**.
+
 ```elixir
 defmodule Bank.BankAccountCommandHandler do
-  use Incident.CommandHandler, aggregate: Bank.BankAccount
+  use Incident.CommandHandler,
+    aggregate: Bank.BankAccount,
+    event_handler: Bank.BankAccountEventHandler
 end
 ```
 
