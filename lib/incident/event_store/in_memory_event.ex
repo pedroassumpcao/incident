@@ -6,6 +6,7 @@ defmodule Incident.EventStore.InMemoryEvent do
   """
 
   @type t :: %__MODULE__{
+          id: pos_integer | nil,
           event_id: String.t() | nil,
           aggregate_id: String.t() | nil,
           event_type: String.t() | nil,
@@ -17,7 +18,6 @@ defmodule Incident.EventStore.InMemoryEvent do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key false
   embedded_schema do
     field(:event_id, :string)
     field(:aggregate_id, :string)
