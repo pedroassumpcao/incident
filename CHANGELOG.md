@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [0.5.1] - 2020-11-03
+
+### Changed
+
+#### Library
+
+- Add `id` for the in memory event data structure;
+- Sort events by `id` in the Event Store `Postgres` and `InMemory` adapters to ensure proper event ordering;
+- Removed `updated_at` column from `events` table in the `mix incident.postgres.init` task;
+- Update documentation;
+- Update package dependencies;
+
+#### Bank Example Application
+
+- Update `events` migration to reflect changes in the `mix incident.postgres.init` task;
+
 ## [0.5.0] - 2020-10-15
 
 ### Added

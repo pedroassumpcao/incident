@@ -21,12 +21,13 @@ defmodule Incident.EventStore.InMemoryAdapter do
     __MODULE__
     |> Agent.get(& &1)
     |> Enum.filter(&(&1.aggregate_id == aggregate_id))
-    |> Enum.reverse()
+    |> Enum.sort(&(&1.id < &2.id))
   end
 
   @impl true
   def append(event) do
     persisted_event = %InMemoryEvent{
+      id: :erlang.unique_integer([:positive, :monotonic]),
       event_id: Ecto.UUID.generate(),
       aggregate_id: event.aggregate_id,
       event_type: event.__struct__ |> Module.split() |> List.last(),

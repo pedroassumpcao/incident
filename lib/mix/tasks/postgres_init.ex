@@ -69,7 +69,8 @@ defmodule Mix.Tasks.Incident.Postgres.Init do
     defmodule <%= inspect @module_name %> do
       use Ecto.Migration
       def change do
-        create table(:events) do
+        create table(:events, primary_key: false) do
+          add(:id, :bigserial, primary_key: true)
           add(:event_id, :binary_id, null: false)
           add(:aggregate_id, :string, null: false)
           add(:event_type, :string, null: false)
@@ -77,7 +78,7 @@ defmodule Mix.Tasks.Incident.Postgres.Init do
           add(:event_date, :utc_datetime_usec, null: false)
           add(:event_data, :map, null: false)
 
-          timestamps(type: :utc_datetime_usec)
+          timestamps(type: :utc_datetime_usec, updated_at: false)
         end
 
         create(index(:events, [:aggregate_id]))

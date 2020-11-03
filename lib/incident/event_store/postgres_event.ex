@@ -6,14 +6,14 @@ defmodule Incident.EventStore.PostgresEvent do
   """
 
   @type t :: %__MODULE__{
+          id: pos_integer | nil,
           event_id: String.t() | nil,
           aggregate_id: String.t() | nil,
           event_type: String.t() | nil,
           version: pos_integer | nil,
           event_date: DateTime.t() | nil,
           event_data: map | nil,
-          inserted_at: DateTime.t() | nil,
-          updated_at: DateTime.t() | nil
+          inserted_at: DateTime.t() | nil
         }
 
   use Ecto.Schema
@@ -28,7 +28,7 @@ defmodule Incident.EventStore.PostgresEvent do
     field(:event_date, :utc_datetime_usec)
     field(:event_data, :map)
 
-    timestamps()
+    timestamps(updated_at: false)
   end
 
   @required_fields ~w(event_id aggregate_id event_type version event_date event_data)a
