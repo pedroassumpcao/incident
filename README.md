@@ -18,6 +18,23 @@ allowing specific needs to leverage what Elixir already brings to the table, for
 * leverage functions and reducers for executing commands and applying events, facilitating stateless tests;
 * allow customization for fine-grained needs without compromising the principles;
 
+## Getting Started
+
+### Example Application
+
+There is an [example application](https://github.com/pedroassumpcao/incident/tree/master/examples/bank)
+that implements a **Bank** application for reference with great documentation and including all the
+details and usage in **IEx** as well.
+
+It also contains projections specific to the application domain with migration and schemas defined.
+
+This example application will give you all the details in how to use **Incident**, including integration
+tests for both `InMemory` and `Postgres` adapters for both Event Store and Projection Store.
+
+### Blog Posts
+
+* [Using Event Sourcing and CQRS with Incident - Part 1](https://pedroassumpcao.ghost.io/event-sourcing-and-cqrs-using-incident-part-1/)
+
 ## Event Sourcing and CQRS
 
 In a nutshell, Event Sourcing ensures that all changes to application state are stored as a sequence of
@@ -74,16 +91,6 @@ Very similar to the Event Store, the Projection Store uses the Port/Adapter desi
 configuration you can define which adapter your application will use to store the aggregate projections.
 Currently, Incident comes with two adapters, an `InMemory` to be used as playground and a `Postgres` one.
 
-## Planned Next Steps
-
-The list below is the upcoming enhacements or fixes, it will grow as the library is being developed.
-
-- [ ] allow Incident to be used by more than one application within the umbrella, if needed;
-- [ ] add Telemetry module and trigger telemetry events;
-- [ ] standardize and document approach for dealing with stale commands and/or race conditions;
-- [ ] run migrations when using `mix incident.postgres.init` for `Postgres` adapter;
-- [ ] allow custom error modules to be used and incorporate as part of the contract in some components;
-
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
@@ -92,7 +99,7 @@ by adding `incident` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:incident, "~> 0.5.0"}
+    {:incident, "~> 0.5.1"}
   ]
 end
 ```
@@ -196,16 +203,19 @@ mix ecto.migrate
 _The migrations and schemas for the projections will depend on your application domains and it follows
 the same process for any Ecto Migration._
 
-## Getting Started
+## Planned Next Steps
 
-There is an [example application](https://github.com/pedroassumpcao/incident/tree/master/examples/bank)
-that implements a **Bank** application for reference with great documentation and including all the
-details and usage in **IEx** as well.
+The list below is the upcoming enhacements or fixes, it will grow as the library is being developed.
 
-It also contains projections specific to the application domain with migration and schemas defined.
+- [ ] allow Incident to be used by more than one application within the umbrella, if needed;
+- [ ] add Telemetry module and trigger telemetry events;
+- [ ] standardize and document approach for dealing with stale commands and/or race conditions;
+- [ ] run migrations when using `mix incident.postgres.init` for `Postgres` adapter;
+- [ ] allow custom error modules to be used and incorporate as part of the contract in some components;
 
-This example application will give you all the details in how to use **Incident**, including integration
-tests for both `InMemory` and `Postgres` adapters for both Event Store and Projection Store.
+## Contributing
+
+We appreciate any contribution to Incident. Please see the [Code of Conduct](https://github.com/pedroassumpcao/incident/blob/master/CODE_OF_CONDUCT.md) and [Contributing](https://github.com/pedroassumpcao/incident/blob/master/CONTRIBUTING.md) guides.
 
 ## Documentation
 
