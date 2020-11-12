@@ -13,14 +13,14 @@ defmodule BankInMemoryTest do
     :ok = Application.stop(:incident)
 
     projection_store_config = [
-      adapter: Incident.ProjectionStore.InMemoryAdapter,
+      adapter: Incident.ProjectionStore.InMemory.Adapter,
       options: [
         initial_state: %{Bank.Projections.BankAccount => [], Bank.Projections.Transfer => []}
       ]
     ]
 
     event_store_config = [
-      adapter: Incident.EventStore.InMemoryAdapter,
+      adapter: Incident.EventStore.InMemory.Adapter,
       options: [
         initial_state: []
       ]
@@ -36,14 +36,14 @@ defmodule BankInMemoryTest do
       :ok = Application.stop(:incident)
 
       projection_store_config = [
-        adapter: Incident.ProjectionStore.PostgresAdapter,
+        adapter: Incident.ProjectionStore.Postgres.Adapter,
         options: [
           repo: Bank.ProjectionStoreRepo
         ]
       ]
 
       event_store_config = [
-        adapter: Incident.EventStore.PostgresAdapter,
+        adapter: Incident.EventStore.Postgres.Adapter,
         options: [
           repo: Bank.EventStoreRepo
         ]

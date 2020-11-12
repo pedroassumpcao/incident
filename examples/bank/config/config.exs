@@ -3,13 +3,13 @@ use Mix.Config
 config :bank, ecto_repos: [Bank.EventStoreRepo, Bank.ProjectionStoreRepo]
 
 config :incident, :event_store,
-  adapter: Incident.EventStore.PostgresAdapter,
+  adapter: Incident.EventStore.Postgres.Adapter,
   options: [
     repo: Bank.EventStoreRepo
   ]
 
 config :incident, :projection_store,
-  adapter: Incident.ProjectionStore.PostgresAdapter,
+  adapter: Incident.ProjectionStore.Postgres.Adapter,
   options: [
     repo: Bank.ProjectionStoreRepo
   ]
