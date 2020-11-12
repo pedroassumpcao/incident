@@ -1,4 +1,4 @@
-defmodule Incident.ProjectionStore.InMemoryAdapter do
+defmodule Incident.ProjectionStore.InMemory.Adapter do
   @moduledoc """
   Implements an in-memory Projection Store using Agents.
   """

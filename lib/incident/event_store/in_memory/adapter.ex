@@ -1,46 +1,33 @@
-defmodule Incident.EventStore.PostgresAdapter do
+defmodule Incident.EventStore.InMemory.Adapter do
   @moduledoc """
-  Implements an Event Store using Postgres through Ecto.
+  Implements an in-memory Event Store using Agents.
   """
 
   @behaviour Incident.EventStore.Adapter
 
-  use GenServer
+  use Agent
 
-  import Ecto.Query, only: [from: 2]
-
-  alias Incident.EventStore.PostgresEvent, as: Event
+  alias Incident.EventStore.InMemory.Event
 
   @spec start_link(keyword) :: GenServer.on_start()
   def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+    initial_state = Keyword.get(opts, :initial_state, [])
+
+    Agent.start_link(fn -> initial_state end, name: __MODULE__)
   end
 
-  @impl GenServer
-  def init(opts) do
-    {:ok, opts}
-  end
-
-  @impl GenServer
-  def handle_call(:repo, _from, [repo: repo] = state) do
-    {:reply, repo, state}
-  end
-
-  @impl Incident.EventStore.Adapter
+  @impl true
   def get(aggregate_id) do
-    query =
-      from(
-        e in Event,
-        where: e.aggregate_id == ^aggregate_id,
-        order_by: [asc: e.id]
-      )
-
-    repo().all(query)
+    __MODULE__
+    |> Agent.get(& &1)
+    |> Enum.filter(&(&1.aggregate_id == aggregate_id))
+    |> Enum.sort(&(&1.id < &2.id))
   end
 
-  @impl Incident.EventStore.Adapter
+  @impl true
   def append(event) do
-    new_event = %{
+    persisted_event = %Event{
+      id: :erlang.unique_integer([:positive, :monotonic]),
       event_id: Ecto.UUID.generate(),
       aggregate_id: event.aggregate_id,
       event_type: event.__struct__ |> Module.split() |> List.last(),
@@ -49,14 +36,9 @@ defmodule Incident.EventStore.PostgresAdapter do
       event_data: event |> Map.from_struct() |> stringify_keys()
     }
 
-    %Event{}
-    |> Event.changeset(new_event)
-    |> repo().insert()
-  end
+    Agent.update(__MODULE__, &([persisted_event] ++ &1))
 
-  @spec repo :: module()
-  defp repo do
-    GenServer.call(__MODULE__, :repo)
+    {:ok, persisted_event}
   end
 
   @spec stringify_keys(map) :: map

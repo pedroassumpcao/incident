@@ -18,8 +18,8 @@ config :incident, Incident.ProjectionStore.TestRepo,
   pool: Ecto.Adapters.SQL.Sandbox,
   priv: "test/support/projection_store"
 
-config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter
+config :incident, :event_store, adapter: Incident.EventStore.InMemory.Adapter
 
-config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter
+config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemory.Adapter
 
 config :logger, level: :error

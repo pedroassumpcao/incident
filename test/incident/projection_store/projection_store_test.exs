@@ -7,7 +7,7 @@ defmodule Incident.ProjectionStoreTest do
     Application.stop(:incident)
 
     projection_store_config = [
-      adapter: Incident.ProjectionStore.InMemoryAdapter,
+      adapter: Incident.ProjectionStore.InMemory.Adapter,
       options: [
         initial_state: %{counters: []}
       ]

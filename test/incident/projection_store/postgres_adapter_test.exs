@@ -3,10 +3,10 @@ defmodule Incident.ProjectionStore.PostgresAdapterTest do
 
   alias Ecto.UUID
   alias Incident.Projections.Counter
-  alias Incident.ProjectionStore.{PostgresAdapter, TestRepo}
+  alias Incident.ProjectionStore.{Postgres.Adapter, TestRepo}
 
   setup do
-    PostgresAdapter.start_link(repo: TestRepo)
+    Adapter.start_link(repo: TestRepo)
 
     on_exit(fn ->
       Application.stop(:incident)
@@ -50,40 +50,40 @@ defmodule Incident.ProjectionStore.PostgresAdapterTest do
                 aggregate_id: "123456",
                 amount: 1,
                 version: 1
-              }} = PostgresAdapter.project(Counter, @to_be_projected_data1)
+              }} = Adapter.project(Counter, @to_be_projected_data1)
 
       assert {:ok,
               %Counter{
                 aggregate_id: "123456",
                 amount: 2,
                 version: 2
-              }} = PostgresAdapter.project(Counter, @to_be_projected_data2)
+              }} = Adapter.project(Counter, @to_be_projected_data2)
     end
   end
 
   describe "all/1" do
     test "returns a list of all projections" do
-      PostgresAdapter.project(Counter, @to_be_projected_data1)
-      PostgresAdapter.project(Counter, @to_be_projected_data2)
-      PostgresAdapter.project(Counter, @to_be_projected_data3)
-      PostgresAdapter.project(Counter, @to_be_projected_data4)
+      Adapter.project(Counter, @to_be_projected_data1)
+      Adapter.project(Counter, @to_be_projected_data2)
+      Adapter.project(Counter, @to_be_projected_data3)
+      Adapter.project(Counter, @to_be_projected_data4)
 
       assert [
                %Counter{aggregate_id: "123456", amount: 3, version: 3},
                %Counter{aggregate_id: "789012", amount: 1, version: 1}
-             ] = PostgresAdapter.all(Counter)
+             ] = Adapter.all(Counter)
     end
   end
 
   describe "get/2" do
     test "returns the aggregate projection when found" do
-      PostgresAdapter.project(Counter, @to_be_projected_data1)
+      Adapter.project(Counter, @to_be_projected_data1)
 
-      assert %Counter{aggregate_id: "123456"} = PostgresAdapter.get(Counter, "123456")
+      assert %Counter{aggregate_id: "123456"} = Adapter.get(Counter, "123456")
     end
 
     test "returns nil when aggregate is not found in the projection" do
-      refute PostgresAdapter.get(Counter, "123456")
+      refute Adapter.get(Counter, "123456")
     end
   end
 end

@@ -4,7 +4,7 @@ defmodule Incident.EventStoreTest do
   alias Ecto.UUID
 
   alias Incident.EventStore
-  alias Incident.EventStore.InMemoryEvent
+  alias Incident.EventStore.InMemory.Event
 
   setup do
     on_exit(fn ->
@@ -28,8 +28,8 @@ defmodule Incident.EventStoreTest do
       event_added = %CounterAdded{aggregate_id: @aggregate_id, amount: 5, version: 1}
       event_removed = %CounterRemoved{aggregate_id: @aggregate_id, amount: 4, version: 2}
 
-      assert {:ok, %InMemoryEvent{}} = EventStore.append(event_added)
-      assert {:ok, %InMemoryEvent{}} = EventStore.append(event_removed)
+      assert {:ok, %Event{}} = EventStore.append(event_added)
+      assert {:ok, %Event{}} = EventStore.append(event_removed)
     end
   end
 
@@ -40,8 +40,7 @@ defmodule Incident.EventStoreTest do
       EventStore.append(event_added)
       EventStore.append(event_removed)
 
-      assert [%InMemoryEvent{version: 1}, %InMemoryEvent{version: 2}] =
-               EventStore.get(@aggregate_id)
+      assert [%Event{version: 1}, %Event{version: 2}] = EventStore.get(@aggregate_id)
     end
 
     test "returns an empty list when no events are found" do

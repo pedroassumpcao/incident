@@ -1,4 +1,4 @@
-defmodule Incident.ProjectionStore.PostgresAdapter do
+defmodule Incident.ProjectionStore.Postgres.Adapter do
   @moduledoc """
   Implements a Projection Store using Postgres through Ecto.
   """
