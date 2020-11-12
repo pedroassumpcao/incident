@@ -59,7 +59,7 @@ defmodule BankInMemoryTest do
   @default_amount 100
   @account_number UUID.generate()
   @account_number2 UUID.generate()
-  @command_open_account %OpenAccount{account_number: @account_number}
+  @command_open_account %OpenAccount{aggregate_id: @account_number}
   @command_deposit_money %DepositMoney{aggregate_id: @account_number, amount: @default_amount}
   @command_withdraw_money %WithdrawMoney{aggregate_id: @account_number, amount: @default_amount}
 
@@ -238,7 +238,7 @@ defmodule BankInMemoryTest do
 
       BankAccountCommandHandler.receive(%{
         @command_open_account
-        | account_number: @account_number2
+        | aggregate_id: @account_number2
       })
 
       :ok

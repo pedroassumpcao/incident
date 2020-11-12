@@ -22,7 +22,7 @@ defmodule Bank.BankAccount do
   }
 
   @impl true
-  def execute(%OpenAccount{account_number: account_number}) do
+  def execute(%OpenAccount{aggregate_id: account_number}) do
     case BankAccountState.get(account_number) do
       %{account_number: nil} = state ->
         new_event = %AccountOpened{
