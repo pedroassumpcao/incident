@@ -1,13 +1,11 @@
-defmodule Incident.EventStore.Postgres.AdapterTest do
-  use Incident.RepoCase, async: true
+defmodule Incident.EventStore.InMemory.AdapterTest do
+  use ExUnit.Case
 
   alias Ecto.UUID
 
-  alias Incident.EventStore.{Postgres.Adapter, Postgres.Event, TestRepo}
+  alias Incident.EventStore.{InMemory.Adapter, InMemory.Event}
 
   setup do
-    Adapter.start_link(repo: TestRepo)
-
     on_exit(fn ->
       Application.stop(:incident)
       {:ok, _apps} = Application.ensure_all_started(:incident)
@@ -31,12 +29,6 @@ defmodule Incident.EventStore.Postgres.AdapterTest do
 
       assert {:ok, %Event{}} = Adapter.append(event_added)
       assert {:ok, %Event{}} = Adapter.append(event_removed)
-    end
-
-    test "does not append a new event into the event store when event is invalid" do
-      event = %CounterAdded{aggregate_id: @aggregate_id, amount: 5, version: nil}
-
-      assert {:error, %Ecto.Changeset{valid?: false}} = Adapter.append(event)
     end
   end
 

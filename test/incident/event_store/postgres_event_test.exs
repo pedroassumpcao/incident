@@ -1,4 +1,4 @@
-defmodule Incident.EventStore.PostgresEventTest do
+defmodule Incident.EventStore.Postgres.EventTest do
   use Incident.RepoCase, async: true
 
   alias Ecto.UUID

@@ -1,4 +1,4 @@
-defmodule Incident.EventStore.InMemoryEventTest do
+defmodule Incident.EventStore.InMemory.EventTest do
   use Incident.RepoCase, async: true
 
   alias Ecto.UUID
