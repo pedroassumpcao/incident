@@ -18,12 +18,12 @@ defmodule Incident.EventStore.InMemory.LockManager do
     GenServer.start_link(__MODULE__, %{config: config, locks: []})
   end
 
-  def acquire_lock(server, aggregate_id, owner_id, timeout_ms \\ nil) do
-    GenServer.call(server, {:acquire_lock, aggregate_id, owner_id, timeout_ms})
+  def acquire_lock(server, aggregate_id, timeout_ms \\ nil) do
+    GenServer.call(server, {:acquire_lock, aggregate_id, timeout_ms})
   end
 
-  def release_lock(server, aggregate_id, owner_id) do
-    GenServer.call(server, {:release_lock, aggregate_id, owner_id})
+  def release_lock(server, aggregate_id) do
+    GenServer.call(server, {:release_lock, aggregate_id})
   end
 
   @impl GenServer
@@ -33,20 +33,21 @@ defmodule Incident.EventStore.InMemory.LockManager do
 
   @impl GenServer
   def handle_call(
-        {:acquire_lock, aggregate_id, owner_id, timeout_ms},
-        _from,
+        {:acquire_lock, aggregate_id, timeout_ms},
+        {owner, _ref},
         %{config: config, locks: locks} = state
       ) do
     now = DateTime.utc_now()
     valid_until = DateTime.add(now, timeout_ms || config[:timeout_ms], :millisecond)
 
-    {reply, state} =
+    {reply, new_state} =
       locks
       |> Enum.find(fn lock ->
         lock.aggregate_id == aggregate_id && DateTime.compare(lock.valid_until, now) == :gt
       end)
       |> case do
         nil ->
+          owner_id = :erlang.phash2(owner)
           lock = %Lock{aggregate_id: aggregate_id, owner_id: owner_id, valid_until: valid_until}
           {:ok, %{state | locks: [lock | locks]}}
 
@@ -54,11 +55,13 @@ defmodule Incident.EventStore.InMemory.LockManager do
           {{:error, :already_locked}, state}
       end
 
-    {:reply, reply, state}
+    {:reply, reply, new_state}
   end
 
   @impl GenServer
-  def handle_call({:release_lock, aggregate_id, owner_id}, _from, %{locks: locks} = state) do
+  def handle_call({:release_lock, aggregate_id}, {owner, _ref}, %{locks: locks} = state) do
+    owner_id = :erlang.phash2(owner)
+
     updated_locks =
       Enum.reject(locks, fn lock ->
         lock.aggregate_id == aggregate_id && lock.owner_id == owner_id
