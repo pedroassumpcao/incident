@@ -1,18 +1,10 @@
 defmodule BankPostgresTest do
-  use Bank.RepoCase, async: true
+  use Bank.RepoCase
 
   alias Bank.{BankAccountCommandHandler, TransferCommandHandler}
   alias Bank.Commands.{DepositMoney, OpenAccount, RequestTransfer, WithdrawMoney}
   alias Bank.Projections.{BankAccount, Transfer}
   alias Ecto.UUID
-
-  setup_all do
-    on_exit(fn ->
-      :ok = Application.stop(:incident)
-
-      {:ok, _apps} = Application.ensure_all_started(:incident)
-    end)
-  end
 
   @default_amount 100
   @account_number UUID.generate()

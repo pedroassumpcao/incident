@@ -7,7 +7,15 @@ defmodule Bank.Application do
     children = [
       Bank.EventStoreRepo,
       Bank.ProjectionStoreRepo,
-      Incident
+      {Incident,
+       event_store: :postgres,
+       event_store_options: [
+         repo: Bank.EventStoreRepo
+       ],
+       projection_store: :postgres,
+       projection_store_options: [
+         repo: Bank.ProjectionStoreRepo
+       ]}
     ]
 
     opts = [strategy: :one_for_one, name: Bank.Supervisor]
