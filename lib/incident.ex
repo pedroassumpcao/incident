@@ -1,16 +1,23 @@
-defmodule Incident.Application do
+defmodule Incident do
   @moduledoc false
 
-  use Application
+  use Supervisor
 
-  def start(_type, _args) do
+  @doc """
+  Starts an instance of Incident by the Incident supervisor.
+  """
+  def start_link(_opts) do
+    Supervisor.start_link(__MODULE__, [], name: Incident.Supervisor)
+  end
+
+  @impl true
+  def init(_config) do
     children = [
       {event_store_adapter(), event_store_options()},
       {projection_store_adapter(), projection_store_options()}
     ]
 
-    opts = [strategy: :one_for_one, name: Incident.Supervisor]
-    Supervisor.start_link(children, opts)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 
   @spec event_store_adapter :: module | no_return
