@@ -3,51 +3,67 @@ defmodule Incident do
 
   use Supervisor
 
+  alias Incident.{EventStore, ProjectionStore}
+
   @doc """
-  Starts an instance of Incident by the Incident supervisor.
+  Starts an instance of Incident with an Incident supervisor.
   """
-  def start_link(_opts) do
-    Supervisor.start_link(__MODULE__, [], name: Incident.Supervisor)
+  def start_link(config) do
+    Supervisor.start_link(__MODULE__, config, name: Incident.Supervisor)
   end
 
   @impl true
-  def init(_config) do
+  def init(config) do
     children = [
-      {event_store_adapter(), event_store_options()},
-      {projection_store_adapter(), projection_store_options()}
+      {EventStore, [adapter: event_store_adapter(config), options: event_store_options(config)]},
+      {ProjectionStore,
+       [adapter: projection_store_adapter(config), options: projection_store_options(config)]}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
   end
 
-  @spec event_store_adapter :: module | no_return
-  defp event_store_adapter do
-    event_store_config()[:adapter] || raise "An Event Store adapter is required in the config."
+  @spec event_store_adapter(keyword()) :: module() | no_return()
+  defp event_store_adapter(config) do
+    case Keyword.get(config, :event_store) do
+      :postgres ->
+        EventStore.Postgres.Adapter
+
+      :in_memory ->
+        EventStore.InMemory.Adapter
+
+      _ ->
+        raise "An Event Store adapter is required in the config. The options are :postgres and :in_memory."
+    end
   end
 
-  @spec event_store_options :: keyword
-  defp event_store_options do
-    event_store_config()[:options] || []
+  @spec event_store_options(keyword()) :: keyword() | no_return()
+  defp event_store_options(config) do
+    case Keyword.get(config, :event_store_options) do
+      nil -> raise "An Event Store Options is required based on the adapter chosen."
+      options -> options
+    end
   end
 
-  @spec projection_store_adapter :: module | no_return
-  defp projection_store_adapter do
-    projection_store_config()[:adapter] ||
-      raise "A Projection Store adapter is required in the config."
+  @spec projection_store_adapter(keyword()) :: module() | no_return()
+  defp projection_store_adapter(config) do
+    case Keyword.get(config, :projection_store) do
+      :postgres ->
+        ProjectionStore.Postgres.Adapter
+
+      :in_memory ->
+        ProjectionStore.InMemory.Adapter
+
+      _ ->
+        raise "A Projection Store adapter is required in the config. The options are :postgres and :in_memory."
+    end
   end
 
-  @spec projection_store_options :: keyword
-  defp projection_store_options do
-    projection_store_config()[:options] || []
-  end
-
-  @spec event_store_config :: keyword
-  defp event_store_config do
-    Application.get_env(:incident, :event_store)
-  end
-
-  @spec projection_store_config :: keyword
-  defp projection_store_config do
-    Application.get_env(:incident, :projection_store)
+  @spec projection_store_options(keyword()) :: keyword() | no_return()
+  defp projection_store_options(config) do
+    case Keyword.get(config, :projection_store_options) do
+      nil -> raise "A Projection Store Options is required based on the adapter chosen."
+      options -> options
+    end
   end
 end

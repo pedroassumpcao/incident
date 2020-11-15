@@ -5,18 +5,36 @@ defmodule Incident.EventStore do
   The data source is based on the configured Event Store Adapter.
   """
 
+  use GenServer
+
+  def start_link([adapter: _adapter, options: _options] = config) do
+    GenServer.start_link(__MODULE__, config, name: __MODULE__)
+  end
+
+  @impl true
+  def init(adapter: adapter, options: options) do
+    adapter.start_link(options)
+    {:ok, %{adapter: adapter}}
+  end
+
   @doc false
   def get(aggregate_id) do
-    apply(adapter(), :get, [aggregate_id])
+    GenServer.call(__MODULE__, {:get, aggregate_id})
   end
 
   @doc false
   def append(event) do
-    apply(adapter(), :append, [event])
+    GenServer.call(__MODULE__, {:append, event})
   end
 
-  @spec adapter :: module
-  defp adapter do
-    Application.get_env(:incident, :event_store)[:adapter]
+  @impl true
+  def handle_call({:get, aggregate_id}, _from, %{adapter: adapter} = state) do
+    events = adapter.get(aggregate_id)
+    {:reply, events, state}
+  end
+
+  def handle_call({:append, event}, _from, %{adapter: adapter} = state) do
+    reply = adapter.append(event)
+    {:reply, reply, state}
   end
 end
