@@ -1,4 +1,32 @@
 defmodule BankInMemoryTest do
+  @moduledoc """
+  This is an example of integration tests using InMemory adapters. To use InMemory adapters you need to
+  change the `application.ex` to define the Incident options in the supervision tree, then run this test:
+
+  ```
+  defmodule Bank.Application do
+    @moduledoc false
+
+    use Application
+
+    def start(_type, _args) do
+      children = [
+        {Incident,
+         event_store: :in_memory,
+         event_store_options: [],
+         projection_store: :in_memory,
+         projection_store_options: [
+           initial_state: %{Bank.Projections.BankAccount => [], Bank.Projections.Transfer => []}
+         ]}
+      ]
+
+      opts = [strategy: :one_for_one, name: Bank.Supervisor]
+      Supervisor.start_link(children, opts)
+    end
+  end
+  ```
+  """
+
   use ExUnit.Case
 
   alias Bank.{BankAccountCommandHandler, TransferCommandHandler}
@@ -6,20 +34,12 @@ defmodule BankInMemoryTest do
   alias Bank.Projections.{BankAccount, Transfer}
   alias Ecto.UUID
 
-  # This setup is only needed becasue we are testing another storage adapter than the configured for
-  # documentation sake. This usually wouldn't happen in a real application.
-  setup_all do
-    config = [
-      event_store: :in_memory,
-      event_store_options: [],
-      projection_store: :in_memory,
-      projection_store_options: [
-        initial_state: %{Bank.Projections.BankAccount => [], Bank.Projections.Transfer => []}
-      ]
-    ]
-
-    start_supervised!({Incident, config})
-    :ok
+  # This setup is only needed becasue we are testing InMemory adapter that uses Agent.
+  # Diffrently than Ecto that uses a Sandbox to rollback changes from one test to another, with Agent,
+  # the reset has to be manual.
+  setup do
+    Application.stop(:bank)
+    :ok = Application.start(:bank)
   end
 
   @default_amount 100
