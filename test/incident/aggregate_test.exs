@@ -1,5 +1,5 @@
 defmodule Incident.AggregateTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   alias Ecto.UUID
 
@@ -23,6 +23,18 @@ defmodule Incident.AggregateTest do
     def apply(%CounterAdded{} = event, state) do
       %{state | amount: state.amount + event.amount, version: event.version}
     end
+  end
+
+  setup do
+    config = [
+      event_store: :in_memory,
+      event_store_options: [],
+      projection_store: :in_memory,
+      projection_store_options: []
+    ]
+
+    start_supervised!({Incident, config})
+    :ok
   end
 
   @aggregate_id UUID.generate()

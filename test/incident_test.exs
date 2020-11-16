@@ -6,11 +6,11 @@ defmodule IncidentTest do
       config = [
         event_store: :postgres,
         event_store_options: [
-          repo: Bank.EventStoreRepo
+          repo: Incident.EventStore.TestRepo
         ],
         projection_store: :postgres,
         projection_store_options: [
-          repo: Bank.ProjectionStoreRepo
+          repo: Incident.ProjectionStore.TestRepo
         ]
       ]
 

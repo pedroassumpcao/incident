@@ -1,17 +1,24 @@
-defmodule Incident.ProjectionStore.PostgresAdapterTest do
-  use Incident.RepoCase, async: true
+defmodule Incident.ProjectionStore.Postgres.AdapterTest do
+  use Incident.RepoCase
 
   alias Ecto.UUID
   alias Incident.Projections.Counter
-  alias Incident.ProjectionStore.{Postgres.Adapter, TestRepo}
+  alias Incident.ProjectionStore.Postgres.Adapter
 
   setup do
-    Adapter.start_link(repo: TestRepo)
+    config = [
+      event_store: :postgres,
+      event_store_options: [
+        repo: Incident.EventStore.TestRepo
+      ],
+      projection_store: :postgres,
+      projection_store_options: [
+        repo: Incident.ProjectionStore.TestRepo
+      ]
+    ]
 
-    on_exit(fn ->
-      Application.stop(:incident)
-      {:ok, _apps} = Application.ensure_all_started(:incident)
-    end)
+    start_supervised!({Incident, config})
+    :ok
   end
 
   @to_be_projected_data1 %{

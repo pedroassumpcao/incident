@@ -3,16 +3,7 @@ defmodule Incident.EventStore.Postgres.AdapterTest do
 
   alias Ecto.UUID
 
-  alias Incident.EventStore.{Postgres.Adapter, Postgres.Event, TestRepo}
-
-  setup do
-    Adapter.start_link(repo: TestRepo)
-
-    on_exit(fn ->
-      Application.stop(:incident)
-      {:ok, _apps} = Application.ensure_all_started(:incident)
-    end)
-  end
+  alias Incident.EventStore.{Postgres.Adapter, Postgres.Event}
 
   defmodule CounterAdded do
     defstruct [:aggregate_id, :amount, :version]
@@ -20,6 +11,22 @@ defmodule Incident.EventStore.Postgres.AdapterTest do
 
   defmodule CounterRemoved do
     defstruct [:aggregate_id, :amount, :version]
+  end
+
+  setup do
+    config = [
+      event_store: :postgres,
+      event_store_options: [
+        repo: Incident.EventStore.TestRepo
+      ],
+      projection_store: :postgres,
+      projection_store_options: [
+        repo: Incident.ProjectionStore.TestRepo
+      ]
+    ]
+
+    start_supervised!({Incident, config})
+    :ok
   end
 
   @aggregate_id UUID.generate()

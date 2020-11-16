@@ -3,13 +3,6 @@ defmodule Incident.AggregateStateTest do
 
   alias Ecto.UUID
 
-  setup do
-    on_exit(fn ->
-      Application.stop(:incident)
-      {:ok, _apps} = Application.ensure_all_started(:incident)
-    end)
-  end
-
   defmodule Counter do
     @behaviour Incident.Aggregate
 
@@ -28,6 +21,18 @@ defmodule Incident.AggregateStateTest do
 
   defmodule CounterAdded do
     defstruct [:aggregate_id, :amount, :version]
+  end
+
+  setup do
+    config = [
+      event_store: :in_memory,
+      event_store_options: [],
+      projection_store: :in_memory,
+      projection_store_options: []
+    ]
+
+    start_supervised!({Incident, config})
+    :ok
   end
 
   @aggregate_id UUID.generate()

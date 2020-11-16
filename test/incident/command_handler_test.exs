@@ -55,6 +55,18 @@ defmodule Incident.CommandHandlerTest do
 
   @aggregate_id UUID.generate()
 
+  setup do
+    config = [
+      event_store: :in_memory,
+      event_store_options: [],
+      projection_store: :in_memory,
+      projection_store_options: []
+    ]
+
+    start_supervised!({Incident, config})
+    :ok
+  end
+
   describe "receive/1" do
     test "returns `{:ok, event}` if the command is successfully executed" do
       assert {:ok, _event} =

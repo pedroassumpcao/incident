@@ -1,13 +1,18 @@
 defmodule Incident.EventStore.InMemory.LockManagerTest do
   use ExUnit.Case
 
-  alias Incident.EventStore.InMemory.{Lock, LockManager}
+  alias Incident.EventStore.InMemory.LockManager
 
   setup do
-    on_exit(fn ->
-      Application.stop(:incident)
-      {:ok, _apps} = Application.ensure_all_started(:incident)
-    end)
+    config = [
+      event_store: :in_memory,
+      event_store_options: [],
+      projection_store: :in_memory,
+      projection_store_options: []
+    ]
+
+    start_supervised!({Incident, config})
+    :ok
   end
 
   @aggregate_id Ecto.UUID.generate()

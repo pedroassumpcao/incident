@@ -4,22 +4,15 @@ defmodule Incident.ProjectionStoreTest do
   alias Incident.ProjectionStore
 
   setup do
-    Application.stop(:incident)
-
-    projection_store_config = [
-      adapter: Incident.ProjectionStore.InMemory.Adapter,
-      options: [
-        initial_state: %{counters: []}
-      ]
+    config = [
+      event_store: :in_memory,
+      event_store_options: [],
+      projection_store: :in_memory,
+      projection_store_options: [initial_state: %{counters: []}]
     ]
 
-    Application.put_env(:incident, :projection_store, projection_store_config)
-    {:ok, _apps} = Application.ensure_all_started(:incident)
-
-    on_exit(fn ->
-      Application.stop(:incident)
-      {:ok, _apps} = Application.ensure_all_started(:incident)
-    end)
+    start_supervised!({Incident, config})
+    :ok
   end
 
   describe "project/2" do
