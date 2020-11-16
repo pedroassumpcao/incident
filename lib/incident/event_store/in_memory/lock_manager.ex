@@ -50,7 +50,9 @@ defmodule Incident.EventStore.InMemory.LockManager do
         nil ->
           owner_id = :erlang.phash2(owner)
           lock = %Lock{aggregate_id: aggregate_id, owner_id: owner_id, valid_until: valid_until}
+
           schedule_release_lock(aggregate_id, timeout)
+
           {:ok, %{state | locks: [lock | locks]}}
 
         _lock ->
@@ -64,23 +66,18 @@ defmodule Incident.EventStore.InMemory.LockManager do
   def handle_call({:release_lock, aggregate_id}, {owner, _ref}, %{locks: locks} = state) do
     owner_id = :erlang.phash2(owner)
 
-    updated_locks =
-      Enum.reject(locks, fn lock ->
-        lock.aggregate_id == aggregate_id && lock.owner_id == owner_id
-      end)
+    updated_locks = Enum.reject(locks, &(&1.aggregate_id == aggregate_id && &1.owner_id == owner_id))
 
     new_state = %{state | locks: updated_locks}
+
     {:reply, :ok, new_state}
   end
 
   @impl GenServer
   def handle_info({:remove_lock, aggregate_id}, %{locks: locks} = state) do
-    updated_locks =
-      Enum.reject(locks, fn lock ->
-        lock.aggregate_id == aggregate_id
-      end)
-
+    updated_locks = Enum.reject(locks, &(&1.aggregate_id == aggregate_id))
     new_state = %{state | locks: updated_locks}
+
     {:noreply, new_state}
   end
 
