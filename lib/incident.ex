@@ -9,15 +9,22 @@ defmodule Incident do
   Starts an instance of Incident with an Incident supervisor.
   """
   def start_link(config) do
+    config = %{
+      event_store: [adapter: event_store_adapter(config), options: event_store_options(config)],
+      projection_store: [
+        adapter: projection_store_adapter(config),
+        options: projection_store_options(config)
+      ]
+    }
+
     Supervisor.start_link(__MODULE__, config, name: Incident.Supervisor)
   end
 
   @impl true
-  def init(config) do
+  def init(%{event_store: event_store, projection_store: projection_store}) do
     children = [
-      {EventStore, [adapter: event_store_adapter(config), options: event_store_options(config)]},
-      {ProjectionStore,
-       [adapter: projection_store_adapter(config), options: projection_store_options(config)]}
+      {EventStore, event_store},
+      {ProjectionStore, projection_store}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
@@ -33,15 +40,19 @@ defmodule Incident do
         EventStore.InMemory.Adapter
 
       _ ->
-        raise "An Event Store adapter is required in the config. The options are :postgres and :in_memory."
+        raise ArgumentError,
+              "An Event Store adapter is required in the config. The options are :postgres and :in_memory."
     end
   end
 
   @spec event_store_options(keyword()) :: keyword() | no_return()
   defp event_store_options(config) do
     case Keyword.get(config, :event_store_options) do
-      nil -> raise "An Event Store Options is required based on the adapter chosen."
-      options -> options
+      nil ->
+        raise ArgumentError, "An Event Store Options is required based on the adapter chosen."
+
+      options ->
+        options
     end
   end
 
@@ -55,15 +66,19 @@ defmodule Incident do
         ProjectionStore.InMemory.Adapter
 
       _ ->
-        raise "A Projection Store adapter is required in the config. The options are :postgres and :in_memory."
+        raise ArgumentError,
+              "A Projection Store adapter is required in the config. The options are :postgres and :in_memory."
     end
   end
 
   @spec projection_store_options(keyword()) :: keyword() | no_return()
   defp projection_store_options(config) do
     case Keyword.get(config, :projection_store_options) do
-      nil -> raise "A Projection Store Options is required based on the adapter chosen."
-      options -> options
+      nil ->
+        raise ArgumentError, "A Projection Store Options is required based on the adapter chosen."
+
+      options ->
+        options
     end
   end
 end
