@@ -21,7 +21,6 @@ defmodule BankPostgresConcurrencyTest do
   @command_withdraw_money %WithdrawMoney{aggregate_id: @account_number, amount: 10}
 
   describe "simple bank account operations" do
-
     test "failing to withdraw more money than the account balance against race condition" do
       BankAccountCommandHandler.receive(@command_open_account)
       BankAccountCommandHandler.receive(@command_deposit_money)
@@ -32,7 +31,7 @@ defmodule BankPostgresConcurrencyTest do
         end)
       end)
       |> Enum.each(fn task ->
-        IO.inspect Task.await(task)
+        IO.inspect(Task.await(task))
       end)
 
       # :timer.sleep(500)

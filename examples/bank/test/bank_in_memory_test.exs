@@ -8,52 +8,18 @@ defmodule BankInMemoryTest do
 
   # This setup is only needed becasue we are testing another storage adapter than the configured for
   # documentation sake. This usually wouldn't happen in a real application.
-  setup do
-    :ok = Application.stop(:bank)
-    :ok = Application.stop(:incident)
-
-    projection_store_config = [
-      adapter: Incident.ProjectionStore.InMemory.Adapter,
-      options: [
+  setup_all do
+    config = [
+      event_store: :in_memory,
+      event_store_options: [],
+      projection_store: :in_memory,
+      projection_store_options: [
         initial_state: %{Bank.Projections.BankAccount => [], Bank.Projections.Transfer => []}
       ]
     ]
 
-    event_store_config = [
-      adapter: Incident.EventStore.InMemory.Adapter,
-      options: [
-        initial_state: []
-      ]
-    ]
-
-    Application.put_env(:incident, :projection_store, projection_store_config)
-    Application.put_env(:incident, :event_store, event_store_config)
-    {:ok, _apps} = Application.ensure_all_started(:incident)
-    {:ok, _apps} = Application.ensure_all_started(:bank)
-
-    on_exit(fn ->
-      :ok = Application.stop(:bank)
-      :ok = Application.stop(:incident)
-
-      projection_store_config = [
-        adapter: Incident.ProjectionStore.Postgres.Adapter,
-        options: [
-          repo: Bank.ProjectionStoreRepo
-        ]
-      ]
-
-      event_store_config = [
-        adapter: Incident.EventStore.Postgres.Adapter,
-        options: [
-          repo: Bank.EventStoreRepo
-        ]
-      ]
-
-      Application.put_env(:incident, :projection_store, projection_store_config)
-      Application.put_env(:incident, :event_store, event_store_config)
-      {:ok, _apps} = Application.ensure_all_started(:incident)
-      {:ok, _apps} = Application.ensure_all_started(:bank)
-    end)
+    start_supervised!({Incident, config})
+    :ok
   end
 
   @default_amount 100
@@ -89,8 +55,7 @@ defmodule BankInMemoryTest do
     test "failing opening an account with same number more than once" do
       assert {:ok, _event} = BankAccountCommandHandler.receive(@command_open_account)
 
-      assert {:error, :account_already_opened} =
-               BankAccountCommandHandler.receive(@command_open_account)
+      assert {:error, :account_already_opened} = BankAccountCommandHandler.receive(@command_open_account)
 
       assert [event] = Incident.EventStore.get(@account_number)
 
@@ -150,8 +115,7 @@ defmodule BankInMemoryTest do
     end
 
     test "failing on attempt to deposit money to a non-existing account" do
-      assert {:error, :account_not_found} =
-               BankAccountCommandHandler.receive(@command_deposit_money)
+      assert {:error, :account_not_found} = BankAccountCommandHandler.receive(@command_deposit_money)
     end
 
     test "depositing and withdrawing money from account" do
@@ -195,8 +159,7 @@ defmodule BankInMemoryTest do
     test "failing to withdraw more money than the account balance" do
       assert {:ok, _event} = BankAccountCommandHandler.receive(@command_open_account)
 
-      assert {:error, :no_enough_balance} =
-               BankAccountCommandHandler.receive(@command_withdraw_money)
+      assert {:error, :no_enough_balance} = BankAccountCommandHandler.receive(@command_withdraw_money)
 
       assert [event1] = Incident.EventStore.get(@account_number)
 
@@ -218,8 +181,7 @@ defmodule BankInMemoryTest do
     end
 
     test "failing on attempt to withdraw money from a non-existing account" do
-      assert {:error, :account_not_found} =
-               BankAccountCommandHandler.receive(@command_withdraw_money)
+      assert {:error, :account_not_found} = BankAccountCommandHandler.receive(@command_withdraw_money)
     end
   end
 
@@ -278,8 +240,7 @@ defmodule BankInMemoryTest do
     test "does not transfer money when there is no enough balance" do
       over_amount = @default_amount + 1
 
-      assert {:ok, _event} =
-               TransferCommandHandler.receive(%{@command_request_transfer | amount: over_amount})
+      assert {:ok, _event} = TransferCommandHandler.receive(%{@command_request_transfer | amount: over_amount})
 
       assert [event1, event2] = Incident.EventStore.get(@transfer_id)
 

@@ -39,8 +39,7 @@ defmodule BankPostgresTest do
     test "failing opening an account with same number more than once" do
       assert {:ok, _event} = BankAccountCommandHandler.receive(@command_open_account)
 
-      assert {:error, :account_already_opened} =
-               BankAccountCommandHandler.receive(@command_open_account)
+      assert {:error, :account_already_opened} = BankAccountCommandHandler.receive(@command_open_account)
 
       assert [event] = Incident.EventStore.get(@account_number)
 
@@ -100,8 +99,7 @@ defmodule BankPostgresTest do
     end
 
     test "failing on attempt to deposit money to a non-existing account" do
-      assert {:error, :account_not_found} =
-               BankAccountCommandHandler.receive(@command_deposit_money)
+      assert {:error, :account_not_found} = BankAccountCommandHandler.receive(@command_deposit_money)
     end
 
     test "depositing and withdrawing money from account" do
@@ -145,8 +143,7 @@ defmodule BankPostgresTest do
     test "failing to withdraw more money than the account balance" do
       assert {:ok, _event} = BankAccountCommandHandler.receive(@command_open_account)
 
-      assert {:error, :no_enough_balance} =
-               BankAccountCommandHandler.receive(@command_withdraw_money)
+      assert {:error, :no_enough_balance} = BankAccountCommandHandler.receive(@command_withdraw_money)
 
       assert [event1] = Incident.EventStore.get(@account_number)
 
@@ -168,8 +165,7 @@ defmodule BankPostgresTest do
     end
 
     test "failing on attempt to withdraw money from a non-existing account" do
-      assert {:error, :account_not_found} =
-               BankAccountCommandHandler.receive(@command_withdraw_money)
+      assert {:error, :account_not_found} = BankAccountCommandHandler.receive(@command_withdraw_money)
     end
   end
 
@@ -228,8 +224,7 @@ defmodule BankPostgresTest do
     test "does not transfer money when there is no enough balance" do
       over_amount = @default_amount + 1
 
-      assert {:ok, _event} =
-               TransferCommandHandler.receive(%{@command_request_transfer | amount: over_amount})
+      assert {:ok, _event} = TransferCommandHandler.receive(%{@command_request_transfer | amount: over_amount})
 
       assert [event1, event2] = Incident.EventStore.get(@transfer_id)
 
