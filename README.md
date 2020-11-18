@@ -99,39 +99,20 @@ by adding `incident` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:incident, "~> 0.5.1"}
+    {:incident, "~> 0.6.0"}
   ]
 end
 ```
 
-## Configuration
+## Usage
 
-### Event Store and Projection Store Setup
+`Incident` will be added as part of the application supervision tree, configuring the the adapters for the
+**Event Store** and the **Projection Store**.
 
-Configure `incident` **Event Store** and **Projection Store** adapters and some options. The options will
-be passed in during the adapter initialization.
+### With Postgres Adapters
 
-#### In Memory Adapter
-
-The goal of using the In Memory Adapter is to provide a quick way to store events and projections,
-as a playground tool. **This adapter is not suppose to be used in a real application.**
-
-```elixir
-config :incident, :event_store, adapter: Incident.EventStore.InMemoryAdapter,
-  options: [
-    initial_state: []
-]
-
-config :incident, :projection_store, adapter: Incident.ProjectionStore.InMemoryAdapter,
-  options: [
-    initial_state: %{}
-]
-```
-
-#### Postgres Adapter
-
-The Postgres adapter uses `Ecto` behind the scenes so a lot of its configuration it is simply
-how you should configure a Postgres database for any application using Ecto.
+The Postgres adapter uses `Ecto` behind the scenes so a lot of its configuration it is simply how you should
+configure a Postgres database for any application using Ecto.
 
 **There will be two Ecto Repos**, one for the events and another one for the projections.
 
@@ -175,16 +156,6 @@ config :app_name, AppName.ProjectionStoreRepo,
   password: "postgres",
   hostname: "localhost",
   database: "app_name_projection_store_dev"
-
-config :incident, :event_store, adapter: Incident.EventStore.PostgresAdapter,
-  options: [
-    repo: AppName.EventStoreRepo
-  ]
-
-config :incident, :projection_store, adapter: Incident.ProjectionStore.PostgresAdapter,
-  options: [
-    repo: AppName.ProjectionStoreRepo
-  ]
 ```
 
 Create the application databases running the Ecto mix task:
@@ -202,6 +173,62 @@ mix ecto.migrate
 
 _The migrations and schemas for the projections will depend on your application domains and it follows
 the same process for any Ecto Migration._
+
+Add `Incident` in the `application.ex`, adding into the application supervision tree:
+
+```
+defmodule AppName.Application do
+  @moduledoc false
+
+  use Application
+
+  def start(_type, _args) do
+    children = [
+      AppName.EventStoreRepo,
+      AppName.ProjectionStoreRepo,
+      {Incident,
+       event_store: :postgres,
+       event_store_options: [
+         repo: AppName.EventStoreRepo
+       ],
+       projection_store: :postgres,
+       projection_store_options: [
+         repo: AppName.ProjectionStoreRepo
+       ]}
+    ]
+
+    opts = [strategy: :one_for_one, name: AppName.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+```
+
+### With InMemory Adapters
+
+In case of `InMemory` adapters that use `Agent` there is no need for any `Ecto` configuration so it is simply added`Incident` to the application supervision tree:
+
+```
+defmodule AppName.Application do
+  @moduledoc false
+
+  use Application
+
+  def start(_type, _args) do
+    children = [
+      {Incident,
+       event_store: :in_memory,
+       event_store_options: [],
+       projection_store: :in_memory,
+       projection_store_options: [
+         initial_state: %{AppName.Projections.ProjectionName => []}
+       ]}
+    ]
+
+    opts = [strategy: :one_for_one, name: AppName.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+```
 
 ## Planned Next Steps
 
