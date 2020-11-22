@@ -5,7 +5,7 @@ defmodule Incident.EventStore.InMemory.LockManager do
 
   use GenServer
 
-  alias Incident.EventStore.InMemory.Lock
+  alias Incident.EventStore.InMemory.AggregateLock
 
   @default_timeout_ms 2_000
 
@@ -49,7 +49,7 @@ defmodule Incident.EventStore.InMemory.LockManager do
       |> case do
         nil ->
           owner_id = :erlang.phash2(owner)
-          lock = %Lock{aggregate_id: aggregate_id, owner_id: owner_id, valid_until: valid_until}
+          lock = %AggregateLock{aggregate_id: aggregate_id, owner_id: owner_id, valid_until: valid_until}
 
           schedule_release_lock(aggregate_id, timeout)
 

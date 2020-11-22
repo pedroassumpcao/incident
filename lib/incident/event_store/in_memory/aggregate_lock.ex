@@ -1,4 +1,4 @@
-defmodule Incident.EventStore.InMemory.Lock do
+defmodule Incident.EventStore.InMemory.AggregateLock do
   @moduledoc """
   Defines the data structure for an aggregate lock for the in memory adapter.
 
