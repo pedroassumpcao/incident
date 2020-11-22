@@ -18,7 +18,7 @@ defmodule IncidentTest do
 
       assert [
                {Incident.ProjectionStore, _pid1, :worker, [Incident.ProjectionStore]},
-               {Incident.EventStore, _pid2, :worker, [Incident.EventStore]}
+               {Incident.EventStoreSupervisor, _pid2, :supervisor, [Incident.EventStoreSupervisor]}
              ] = Supervisor.which_children(Incident.Supervisor)
     end
 

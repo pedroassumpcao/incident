@@ -3,7 +3,7 @@ defmodule Incident do
 
   use Supervisor
 
-  alias Incident.{EventStore, ProjectionStore}
+  alias Incident.{EventStore, EventStoreSupervisor, ProjectionStore}
 
   @doc """
   Starts an instance of Incident with an Incident supervisor.
@@ -23,7 +23,7 @@ defmodule Incident do
   @impl true
   def init(%{event_store: event_store, projection_store: projection_store}) do
     children = [
-      {EventStore, event_store},
+      {EventStoreSupervisor, event_store},
       {ProjectionStore, projection_store}
     ]
 
