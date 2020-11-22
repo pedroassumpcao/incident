@@ -22,8 +22,8 @@ defmodule Incident.EventStore.Postgres.Adapter do
   end
 
   @impl GenServer
-  def handle_call(:repo, _from, [repo: repo] = state) do
-    {:reply, repo, state}
+  def handle_call(:repo, _from, state) do
+    {:reply, state[:repo], state}
   end
 
   @impl Incident.EventStore.Adapter
