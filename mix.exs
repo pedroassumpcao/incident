@@ -12,9 +12,7 @@ defmodule Incident.MixProject do
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      dialyzer: [
-        plt_add_apps: [:eex, :ex_unit, :mix]
-      ],
+      dialyzer: dialyzer(),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
@@ -73,6 +71,14 @@ defmodule Incident.MixProject do
         "dialyzer"
       ],
       test: ["ecto.create --quiet", "ecto.migrate", "test"]
+    ]
+  end
+
+  defp dialyzer do
+    [
+      ignore_warnings: ".dialyzer_ignore.exs",
+      list_unused_filters: true,
+      plt_add_apps: [:eex, :ex_unit, :mix]
     ]
   end
 end
