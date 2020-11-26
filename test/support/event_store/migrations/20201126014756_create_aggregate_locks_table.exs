@@ -1,4 +1,4 @@
-defmodule Bank.EventStoreRepo.Migrations.CreateAggregateLocksTable do
+defmodule Incident.EventStore.TestRepo.CreateAggregateLocksTable do
   use Ecto.Migration
 
   def change do
@@ -9,7 +9,7 @@ defmodule Bank.EventStoreRepo.Migrations.CreateAggregateLocksTable do
       add(:valid_until, :utc_datetime_usec, null: false)
     end
 
-    create(index(:aggregate_locks, [:aggregate_id]))
+    create(index(:aggregate_locks, [:aggregate_id], unique: true))
     create(index(:aggregate_locks, [:aggregate_id, :owner_id]))
     create(index(:aggregate_locks, [:valid_until]))
   end

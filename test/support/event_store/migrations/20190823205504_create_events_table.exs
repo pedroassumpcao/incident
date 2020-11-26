@@ -1,4 +1,4 @@
-defmodule Bank.EventStoreRepo.Migrations.AddEventsTable do
+defmodule Incident.EventStore.TestRepo.Migrations.CreateEventsTable do
   use Ecto.Migration
 
   def change do
