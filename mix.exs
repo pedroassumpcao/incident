@@ -77,7 +77,6 @@ defmodule Incident.MixProject do
   defp dialyzer do
     [
       ignore_warnings: ".dialyzer_ignore.exs",
-      list_unused_filters: true,
       plt_add_apps: [:eex, :ex_unit, :mix]
     ]
   end
