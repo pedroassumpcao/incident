@@ -1,6 +1,6 @@
-defmodule Incident.EventStore.InMemory.AggregateLock do
+defmodule Incident.EventStore.Postgres.AggregateLock do
   @moduledoc """
-  Defines the data structure for an aggregate lock for the in memory adapter.
+  Defines the data structure for an aggregate lock for the Postgres adapter.
 
   All fields are required.
   """
@@ -15,7 +15,7 @@ defmodule Incident.EventStore.InMemory.AggregateLock do
   use Ecto.Schema
   import Ecto.Changeset
 
-  embedded_schema do
+  schema "aggregate_locks" do
     field(:aggregate_id, :string)
     field(:owner_id, :integer)
     field(:valid_until, :utc_datetime_usec)
@@ -29,5 +29,6 @@ defmodule Incident.EventStore.InMemory.AggregateLock do
     record
     |> cast(params, @required_fields)
     |> validate_required(@required_fields)
+    |> unique_constraint(:aggregate_id)
   end
 end
