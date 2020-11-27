@@ -24,11 +24,10 @@ defmodule Incident.EventStore.Postgres.AggregateLock do
   @required_fields ~w(aggregate_id owner_id valid_until)a
 
   @doc false
-  @spec changeset(t, map) :: Ecto.Changeset.t()
+  @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(record, params \\ %{}) do
     record
     |> cast(params, @required_fields)
     |> validate_required(@required_fields)
-    |> unique_constraint(:aggregate_id)
   end
 end

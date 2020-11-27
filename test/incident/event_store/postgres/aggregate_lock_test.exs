@@ -3,7 +3,6 @@ defmodule Incident.EventStore.Postgres.AggregateLockTest do
 
   alias Ecto.UUID
   alias Incident.EventStore.Postgres.AggregateLock
-  alias Incident.EventStore.TestRepo, as: EventStoreTestRepo
 
   @valid_params %{
     aggregate_id: UUID.generate(),
@@ -33,16 +32,6 @@ defmodule Incident.EventStore.Postgres.AggregateLockTest do
 
       refute changeset.valid?
       assert %{valid_until: ["is invalid"]} = errors_on(changeset)
-    end
-  end
-
-  describe "changeset/2 with database constraints" do
-    test "checks aggregate_id uniqueness" do
-      changeset = AggregateLock.changeset(%AggregateLock{}, @valid_params)
-
-      assert {:ok, _aggregate_lock} = EventStoreTestRepo.insert(changeset)
-      assert {:error, changeset} = EventStoreTestRepo.insert(changeset)
-      assert %{aggregate_id: ["has already been taken"]} == errors_on(changeset)
     end
   end
 end
