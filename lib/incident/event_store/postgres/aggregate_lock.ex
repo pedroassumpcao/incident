@@ -9,7 +9,7 @@ defmodule Incident.EventStore.Postgres.AggregateLock do
           id: pos_integer | nil,
           aggregate_id: String.t() | nil,
           owner_id: pos_integer() | nil,
-          valid_until: DateTime.t()
+          valid_until: DateTime.t() | nil
         }
 
   use Ecto.Schema

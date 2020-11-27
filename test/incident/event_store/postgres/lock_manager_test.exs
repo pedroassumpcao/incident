@@ -1,14 +1,18 @@
-defmodule Incident.EventStore.InMemory.LockManagerTest do
-  use ExUnit.Case
+defmodule Incident.EventStore.Postgres.LockManagerTest do
+  use Incident.RepoCase
 
-  alias Incident.EventStore.InMemory.LockManager
+  alias Incident.EventStore.Postgres.LockManager
 
   setup do
     config = [
-      event_store: :in_memory,
-      event_store_options: [],
-      projection_store: :in_memory,
-      projection_store_options: []
+      event_store: :postgres,
+      event_store_options: [
+        repo: Incident.EventStore.TestRepo
+      ],
+      projection_store: :postgres,
+      projection_store_options: [
+        repo: Incident.ProjectionStore.TestRepo
+      ]
     ]
 
     start_supervised!({Incident, config})
