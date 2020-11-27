@@ -55,7 +55,7 @@ defmodule Incident.EventStore.Postgres.Adapter do
   end
 
   @spec repo :: module()
-  defp repo do
+  def repo do
     GenServer.call(__MODULE__, :repo)
   end
 

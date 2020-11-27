@@ -3,7 +3,7 @@ defmodule Incident.EventStore.Postgres.AdapterTest do
 
   alias Ecto.UUID
 
-  alias Incident.EventStore.{Postgres.Adapter, Postgres.Event}
+  alias Incident.EventStore.Postgres.{Adapter, Event}
 
   defmodule CounterAdded do
     defstruct [:aggregate_id, :amount, :version]
