@@ -1,6 +1,8 @@
 defmodule Incident.EventStore.Postgres.LockManager do
   @moduledoc """
-  Manages aggregate locks for events for the Postgres adapter.
+  Manages aggregate locks for the Postgres adapter.
+
+  The Lock Manager can be configured during initialization for the retry logic and lock timeout.
   """
 
   use GenServer
@@ -29,11 +31,19 @@ defmodule Incident.EventStore.Postgres.LockManager do
     GenServer.start_link(__MODULE__, %{config: config})
   end
 
+  @doc """
+  Attempts to acquire a lock for the aggregate id.
+  It uses the lock manager configuration for retry logic. In case the lock can't be acquired after all
+  retry attempts, it will return an error.
+  """
   @spec acquire_lock(pid(), aggregate_id()) :: lock_acquisition_response()
   def acquire_lock(server, aggregate_id) do
     GenServer.call(server, {:acquire_lock, aggregate_id})
   end
 
+  @doc """
+  Removes the lock for the aggregate id that belongs to the caller.
+  """
   @spec release_lock(pid(), aggregate_id()) :: :ok
   def release_lock(server, aggregate_id) do
     GenServer.call(server, {:release_lock, aggregate_id})
