@@ -44,17 +44,30 @@ defmodule Incident.EventStore.Postgres.LockManagerTest do
       assert :ok = LockManager.acquire_lock(pid, @aggregate_id)
     end
 
+    test "returns `:ok` eventually after retries" do
+      {:ok, pid} = LockManager.start_link(timeout_ms: 500, jitter_range_ms: 500..600, retries: 3)
+
+      assert :ok = LockManager.acquire_lock(pid, @aggregate_id)
+      assert :ok = LockManager.acquire_lock(pid, @aggregate_id)
+    end
+
     test "returns `{:eror, :already_locked}` when lock is in use" do
-      {:ok, pid} = LockManager.start_link(timeout_ms: 5_000)
+      {:ok, pid} = LockManager.start_link(timeout_ms: 1_000, jitter_range_ms: 1..10)
 
       assert :ok = LockManager.acquire_lock(pid, @aggregate_id)
       assert {:error, :already_locked} = LockManager.acquire_lock(pid, @aggregate_id)
+    end
+
+    test "returns `{:eror, :failed_to_lock}` when retries are not positive" do
+      {:ok, pid} = LockManager.start_link(retries: 0)
+
+      assert {:error, :failed_to_lock} = LockManager.acquire_lock(pid, @aggregate_id)
     end
   end
 
   describe "release_lock/2" do
     test "releases the lock for the `aggregate_id`" do
-      {:ok, pid} = LockManager.start_link()
+      {:ok, pid} = LockManager.start_link(timeout_ms: 1_000, jitter_range_ms: 1..10)
 
       assert :ok = LockManager.acquire_lock(pid, @aggregate_id)
       assert {:error, :already_locked} = LockManager.acquire_lock(pid, @aggregate_id)
