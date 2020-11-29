@@ -7,21 +7,31 @@ defmodule Incident.EventStore.InMemory.LockManager do
 
   alias Incident.EventStore.InMemory.AggregateLock
 
+  @type config :: keyword()
+  @type aggregate_id :: String.t()
+  @type lock_acquisition_response :: :ok | {:error, :already_locked | :failed_to_lock}
+
   @default_timeout_ms 2_000
+  @default_retries 5
+  @default_jitter_range_ms 100..1000
 
   @spec start_link(keyword) :: GenServer.on_start()
   def start_link(opts \\ []) do
     config = [
-      timeout_ms: Keyword.get(opts, :timeout_ms, @default_timeout_ms)
+      timeout_ms: Keyword.get(opts, :timeout_ms, @default_timeout_ms),
+      retries: Keyword.get(opts, :retries, @default_retries),
+      jitter_range_ms: Keyword.get(opts, :jitter_range_ms, @default_jitter_range_ms)
     ]
 
     GenServer.start_link(__MODULE__, %{config: config, locks: []})
   end
 
+  @spec acquire_lock(pid(), aggregate_id()) :: lock_acquisition_response()
   def acquire_lock(server, aggregate_id) do
     GenServer.call(server, {:acquire_lock, aggregate_id})
   end
 
+  @spec release_lock(pid(), aggregate_id()) :: :ok
   def release_lock(server, aggregate_id) do
     GenServer.call(server, {:release_lock, aggregate_id})
   end
@@ -32,25 +42,15 @@ defmodule Incident.EventStore.InMemory.LockManager do
   end
 
   @impl GenServer
-  def handle_call({:acquire_lock, aggregate_id}, {owner, _ref}, %{config: config, locks: locks} = state) do
-    now = DateTime.utc_now()
-
+  def handle_call({:acquire_lock, aggregate_id}, {owner, _ref}, %{config: config} = state) do
     {reply, new_state} =
-      locks
-      |> Enum.find(fn lock ->
-        lock.aggregate_id == aggregate_id && DateTime.compare(lock.valid_until, now) == :gt
-      end)
-      |> case do
-        nil ->
-          valid_until = DateTime.add(now, config[:timeout_ms], :millisecond)
-          lock = %AggregateLock{aggregate_id: aggregate_id, owner_id: :erlang.phash2(owner), valid_until: valid_until}
-
+      case do_acquire_lock(aggregate_id, owner, state, config[:retries]) do
+        {:ok, new_state} ->
           schedule_auto_release_lock(aggregate_id, config[:timeout_ms])
+          {:ok, new_state}
 
-          {:ok, %{state | locks: [lock | locks]}}
-
-        _lock ->
-          {{:error, :already_locked}, state}
+        error ->
+          error
       end
 
     {:reply, reply, new_state}
@@ -75,6 +75,38 @@ defmodule Incident.EventStore.InMemory.LockManager do
     {:noreply, new_state}
   end
 
+  @spec do_acquire_lock(aggregate_id(), pid(), map(), non_neg_integer(), lock_acquisition_response()) ::
+          {lock_acquisition_response(), map()}
+  defp do_acquire_lock(aggregate_id, owner, state, retries, reply \\ {:error, :failed_to_lock})
+
+  defp do_acquire_lock(_aggregate_id, _owner, state, retries, reply) when retries <= 0, do: {reply, state}
+
+  defp do_acquire_lock(aggregate_id, owner, %{config: config, locks: locks} = state, retries, _reply) do
+    if config[:retries] > retries do
+      config[:jitter_range_ms]
+      |> Enum.random()
+      |> :timer.sleep()
+    end
+
+    now = DateTime.utc_now()
+
+    locks
+    |> Enum.find(fn lock ->
+      lock.aggregate_id == aggregate_id && DateTime.compare(lock.valid_until, now) == :gt
+    end)
+    |> case do
+      nil ->
+        valid_until = DateTime.add(now, config[:timeout_ms], :millisecond)
+        lock = %AggregateLock{aggregate_id: aggregate_id, owner_id: :erlang.phash2(owner), valid_until: valid_until}
+
+        {:ok, %{state | locks: [lock | locks]}}
+
+      _lock ->
+        do_acquire_lock(aggregate_id, owner, state, retries - 1, {:error, :already_locked})
+    end
+  end
+
+  @spec schedule_auto_release_lock(aggregate_id(), pos_integer()) :: reference()
   defp schedule_auto_release_lock(aggregate_id, interval) do
     Process.send_after(self(), {:auto_release_lock, aggregate_id}, interval)
   end
