@@ -11,18 +11,20 @@ defmodule Incident.EventStore.Postgres.LockManager do
   alias Incident.EventStore.Postgres.{Adapter, AggregateLock}
 
   @default_timeout_ms 2_000
+  @default_retries 5
 
   @spec start_link(keyword) :: GenServer.on_start()
   def start_link(opts \\ []) do
     config = [
-      timeout_ms: Keyword.get(opts, :timeout_ms, @default_timeout_ms)
+      timeout_ms: Keyword.get(opts, :timeout_ms, @default_timeout_ms),
+      retries: Keyword.get(opts, :retries, @default_retries)
     ]
 
     GenServer.start_link(__MODULE__, %{config: config})
   end
 
-  def acquire_lock(server, aggregate_id, timeout_ms \\ nil) do
-    GenServer.call(server, {:acquire_lock, aggregate_id, timeout_ms})
+  def acquire_lock(server, aggregate_id) do
+    GenServer.call(server, {:acquire_lock, aggregate_id})
   end
 
   def release_lock(server, aggregate_id) do
@@ -35,9 +37,8 @@ defmodule Incident.EventStore.Postgres.LockManager do
   end
 
   @impl GenServer
-  def handle_call({:acquire_lock, aggregate_id, timeout_ms}, {owner, _ref}, %{config: config} = state) do
+  def handle_call({:acquire_lock, aggregate_id}, {owner, _ref}, %{config: config} = state) do
     now = DateTime.utc_now()
-    timeout = timeout_ms || config[:timeout_ms]
 
     reply =
       Multi.new()
@@ -53,7 +54,7 @@ defmodule Incident.EventStore.Postgres.LockManager do
 
         case repo.one(query) do
           nil ->
-            valid_until = DateTime.add(now, timeout, :millisecond)
+            valid_until = DateTime.add(now, config[:timeout_ms], :millisecond)
 
             changeset =
               AggregateLock.changeset(%AggregateLock{}, %{
@@ -74,7 +75,7 @@ defmodule Incident.EventStore.Postgres.LockManager do
       |> Adapter.repo().transaction()
       |> case do
         {:ok, _} ->
-          schedule_auto_release_lock(aggregate_id, timeout)
+          schedule_auto_release_lock(aggregate_id, config[:timeout_ms])
           :ok
 
         {:error, :changeset, _, _} ->

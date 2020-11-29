@@ -18,8 +18,8 @@ defmodule Incident.EventStore.InMemory.LockManager do
     GenServer.start_link(__MODULE__, %{config: config, locks: []})
   end
 
-  def acquire_lock(server, aggregate_id, timeout_ms \\ nil) do
-    GenServer.call(server, {:acquire_lock, aggregate_id, timeout_ms})
+  def acquire_lock(server, aggregate_id) do
+    GenServer.call(server, {:acquire_lock, aggregate_id})
   end
 
   def release_lock(server, aggregate_id) do
@@ -32,14 +32,8 @@ defmodule Incident.EventStore.InMemory.LockManager do
   end
 
   @impl GenServer
-  def handle_call(
-        {:acquire_lock, aggregate_id, timeout_ms},
-        {owner, _ref},
-        %{config: config, locks: locks} = state
-      ) do
+  def handle_call({:acquire_lock, aggregate_id}, {owner, _ref}, %{config: config, locks: locks} = state) do
     now = DateTime.utc_now()
-    timeout = timeout_ms || config[:timeout_ms]
-    valid_until = DateTime.add(now, timeout, :millisecond)
 
     {reply, new_state} =
       locks
@@ -48,10 +42,10 @@ defmodule Incident.EventStore.InMemory.LockManager do
       end)
       |> case do
         nil ->
-          owner_id = :erlang.phash2(owner)
-          lock = %AggregateLock{aggregate_id: aggregate_id, owner_id: owner_id, valid_until: valid_until}
+          valid_until = DateTime.add(now, config[:timeout_ms], :millisecond)
+          lock = %AggregateLock{aggregate_id: aggregate_id, owner_id: :erlang.phash2(owner), valid_until: valid_until}
 
-          schedule_auto_release_lock(aggregate_id, timeout)
+          schedule_auto_release_lock(aggregate_id, config[:timeout_ms])
 
           {:ok, %{state | locks: [lock | locks]}}
 
