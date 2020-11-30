@@ -7,12 +7,12 @@ defmodule Incident.EventStore do
 
   use GenServer
 
-  def start_link([adapter: _adapter, options: _options] = config) do
+  def start_link(config) do
     GenServer.start_link(__MODULE__, config, name: __MODULE__)
   end
 
   @impl true
-  def init(adapter: adapter, options: options) do
+  def init(%{adapter: adapter, options: options}) do
     adapter.start_link(options)
     {:ok, %{adapter: adapter}}
   end

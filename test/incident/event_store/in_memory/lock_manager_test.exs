@@ -7,12 +7,16 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
 
   describe "acquire_lock/2" do
     test "returns `:ok` when lock is acquired" do
-      config = [
-        event_store: :in_memory,
-        event_store_options: [],
-        projection_store: :in_memory,
-        projection_store_options: []
-      ]
+      config = %{
+        event_store: %{
+          adapter: :in_memory,
+          options: []
+        },
+        projection_store: %{
+          adapter: :in_memory,
+          options: []
+        }
+      }
 
       start_supervised!({Incident, config})
 
@@ -22,16 +26,20 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
     test "auto removes the lock after lock timeout" do
       timeout_ms = 200
 
-      config = [
-        event_store: :in_memory,
-        event_store_options: [
-          lock_manager_config: [
-            timeout_ms: timeout_ms
+      config = %{
+        event_store: %{
+          adapter: :in_memory,
+          options: [
+            lock_manager_config: [
+              timeout_ms: timeout_ms
+            ]
           ]
-        ],
-        projection_store: :in_memory,
-        projection_store_options: []
-      ]
+        },
+        projection_store: %{
+          adapter: :in_memory,
+          options: []
+        }
+      }
 
       start_supervised!({Incident, config})
 
@@ -41,16 +49,20 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
     end
 
     test "returns `:ok` when lock exist but it is expired" do
-      config = [
-        event_store: :in_memory,
-        event_store_options: [
-          lock_manager_config: [
-            timeout_ms: 0
+      config = %{
+        event_store: %{
+          adapter: :in_memory,
+          options: [
+            lock_manager_config: [
+              timeout_ms: 0
+            ]
           ]
-        ],
-        projection_store: :in_memory,
-        projection_store_options: []
-      ]
+        },
+        projection_store: %{
+          adapter: :in_memory,
+          options: []
+        }
+      }
 
       start_supervised!({Incident, config})
 
@@ -59,18 +71,22 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
     end
 
     test "returns `:ok` eventually after retries" do
-      config = [
-        event_store: :in_memory,
-        event_store_options: [
-          lock_manager_config: [
-            timeout_ms: 500,
-            jitter_range_ms: 500..600,
-            retries: 3
+      config = %{
+        event_store: %{
+          adapter: :in_memory,
+          options: [
+            lock_manager_config: [
+              timeout_ms: 500,
+              jitter_range_ms: 500..600,
+              retries: 3
+            ]
           ]
-        ],
-        projection_store: :in_memory,
-        projection_store_options: []
-      ]
+        },
+        projection_store: %{
+          adapter: :in_memory,
+          options: []
+        }
+      }
 
       start_supervised!({Incident, config})
 
@@ -79,17 +95,21 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
     end
 
     test "returns `{:eror, :already_locked}` when lock is in use" do
-      config = [
-        event_store: :in_memory,
-        event_store_options: [
-          lock_manager_config: [
-            timeout_ms: 1_000,
-            jitter_range_ms: 1..10
+      config = %{
+        event_store: %{
+          adapter: :in_memory,
+          options: [
+            lock_manager_config: [
+              timeout_ms: 1_000,
+              jitter_range_ms: 1..10
+            ]
           ]
-        ],
-        projection_store: :in_memory,
-        projection_store_options: []
-      ]
+        },
+        projection_store: %{
+          adapter: :in_memory,
+          options: []
+        }
+      }
 
       start_supervised!({Incident, config})
 
@@ -98,16 +118,20 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
     end
 
     test "returns `{:eror, :failed_to_lock}` when retries are not positive" do
-      config = [
-        event_store: :in_memory,
-        event_store_options: [
-          lock_manager_config: [
-            retries: 0
+      config = %{
+        event_store: %{
+          adapter: :in_memory,
+          options: [
+            lock_manager_config: [
+              retries: 0
+            ]
           ]
-        ],
-        projection_store: :in_memory,
-        projection_store_options: []
-      ]
+        },
+        projection_store: %{
+          adapter: :in_memory,
+          options: []
+        }
+      }
 
       start_supervised!({Incident, config})
 
@@ -117,17 +141,21 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
 
   describe "release_lock/2" do
     test "releases the lock for the `aggregate_id`" do
-      config = [
-        event_store: :in_memory,
-        event_store_options: [
-          lock_manager_config: [
-            timeout_ms: 1_000,
-            jitter_range_ms: 1..10
+      config = %{
+        event_store: %{
+          adapter: :in_memory,
+          options: [
+            lock_manager_config: [
+              timeout_ms: 1_000,
+              jitter_range_ms: 1..10
+            ]
           ]
-        ],
-        projection_store: :in_memory,
-        projection_store_options: []
-      ]
+        },
+        projection_store: %{
+          adapter: :in_memory,
+          options: []
+        }
+      }
 
       start_supervised!({Incident, config})
 

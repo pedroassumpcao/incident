@@ -7,16 +7,16 @@ defmodule Incident.EventStore.Postgres.LockManagerTest do
 
   describe "acquire_lock/2" do
     test "returns `:ok` when lock is acquired" do
-      config = [
-        event_store: :postgres,
-        event_store_options: [
-          repo: Incident.EventStore.TestRepo
-        ],
-        projection_store: :postgres,
-        projection_store_options: [
-          repo: Incident.ProjectionStore.TestRepo
-        ]
-      ]
+      config = %{
+        event_store: %{
+          adapter: :postgres,
+          options: [repo: Incident.EventStore.TestRepo]
+        },
+        projection_store: %{
+          adapter: :postgres,
+          options: [repo: Incident.ProjectionStore.TestRepo]
+        }
+      }
 
       start_supervised!({Incident, config})
       assert :ok = LockManager.acquire_lock(@aggregate_id)
@@ -25,19 +25,21 @@ defmodule Incident.EventStore.Postgres.LockManagerTest do
     test "auto removes the lock after lock timeout" do
       timeout_ms = 200
 
-      config = [
-        event_store: :postgres,
-        event_store_options: [
-          repo: Incident.EventStore.TestRepo,
-          lock_manager_config: [
-            timeout_ms: timeout_ms
+      config = %{
+        event_store: %{
+          adapter: :postgres,
+          options: [
+            repo: Incident.EventStore.TestRepo,
+            lock_manager_config: [
+              timeout_ms: timeout_ms
+            ]
           ]
-        ],
-        projection_store: :postgres,
-        projection_store_options: [
-          repo: Incident.ProjectionStore.TestRepo
-        ]
-      ]
+        },
+        projection_store: %{
+          adapter: :postgres,
+          options: [repo: Incident.ProjectionStore.TestRepo]
+        }
+      }
 
       start_supervised!({Incident, config})
 
@@ -47,19 +49,21 @@ defmodule Incident.EventStore.Postgres.LockManagerTest do
     end
 
     test "returns `:ok` when lock exist but it is expired" do
-      config = [
-        event_store: :postgres,
-        event_store_options: [
-          repo: Incident.EventStore.TestRepo,
-          lock_manager_config: [
-            timeout_ms: 0
+      config = %{
+        event_store: %{
+          adapter: :postgres,
+          options: [
+            repo: Incident.EventStore.TestRepo,
+            lock_manager_config: [
+              timeout_ms: 0
+            ]
           ]
-        ],
-        projection_store: :postgres,
-        projection_store_options: [
-          repo: Incident.ProjectionStore.TestRepo
-        ]
-      ]
+        },
+        projection_store: %{
+          adapter: :postgres,
+          options: [repo: Incident.ProjectionStore.TestRepo]
+        }
+      }
 
       start_supervised!({Incident, config})
 
@@ -68,21 +72,23 @@ defmodule Incident.EventStore.Postgres.LockManagerTest do
     end
 
     test "returns `:ok` eventually after retries" do
-      config = [
-        event_store: :postgres,
-        event_store_options: [
-          repo: Incident.EventStore.TestRepo,
-          lock_manager_config: [
-            timeout_ms: 500,
-            jitter_range_ms: 500..600,
-            retries: 3
+      config = %{
+        event_store: %{
+          adapter: :postgres,
+          options: [
+            repo: Incident.EventStore.TestRepo,
+            lock_manager_config: [
+              timeout_ms: 500,
+              jitter_range_ms: 500..600,
+              retries: 3
+            ]
           ]
-        ],
-        projection_store: :postgres,
-        projection_store_options: [
-          repo: Incident.ProjectionStore.TestRepo
-        ]
-      ]
+        },
+        projection_store: %{
+          adapter: :postgres,
+          options: [repo: Incident.ProjectionStore.TestRepo]
+        }
+      }
 
       start_supervised!({Incident, config})
 
@@ -91,20 +97,22 @@ defmodule Incident.EventStore.Postgres.LockManagerTest do
     end
 
     test "returns `{:eror, :already_locked}` when lock is in use" do
-      config = [
-        event_store: :postgres,
-        event_store_options: [
-          repo: Incident.EventStore.TestRepo,
-          lock_manager_config: [
-            timeout_ms: 1_000,
-            jitter_range_ms: 1..10
+      config = %{
+        event_store: %{
+          adapter: :postgres,
+          options: [
+            repo: Incident.EventStore.TestRepo,
+            lock_manager_config: [
+              timeout_ms: 1_000,
+              jitter_range_ms: 1..10
+            ]
           ]
-        ],
-        projection_store: :postgres,
-        projection_store_options: [
-          repo: Incident.ProjectionStore.TestRepo
-        ]
-      ]
+        },
+        projection_store: %{
+          adapter: :postgres,
+          options: [repo: Incident.ProjectionStore.TestRepo]
+        }
+      }
 
       start_supervised!({Incident, config})
 
@@ -113,19 +121,21 @@ defmodule Incident.EventStore.Postgres.LockManagerTest do
     end
 
     test "returns `{:eror, :failed_to_lock}` when retries are not positive" do
-      config = [
-        event_store: :postgres,
-        event_store_options: [
-          repo: Incident.EventStore.TestRepo,
-          lock_manager_config: [
-            retries: 0
+      config = %{
+        event_store: %{
+          adapter: :postgres,
+          options: [
+            repo: Incident.EventStore.TestRepo,
+            lock_manager_config: [
+              retries: 0
+            ]
           ]
-        ],
-        projection_store: :postgres,
-        projection_store_options: [
-          repo: Incident.ProjectionStore.TestRepo
-        ]
-      ]
+        },
+        projection_store: %{
+          adapter: :postgres,
+          options: [repo: Incident.ProjectionStore.TestRepo]
+        }
+      }
 
       start_supervised!({Incident, config})
 
@@ -135,20 +145,22 @@ defmodule Incident.EventStore.Postgres.LockManagerTest do
 
   describe "release_lock/2" do
     test "releases the lock for the `aggregate_id`" do
-      config = [
-        event_store: :postgres,
-        event_store_options: [
-          repo: Incident.EventStore.TestRepo,
-          lock_manager_config: [
-            timeout_ms: 1_000,
-            jitter_range_ms: 1..10
+      config = %{
+        event_store: %{
+          adapter: :postgres,
+          options: [
+            repo: Incident.EventStore.TestRepo,
+            lock_manager_config: [
+              timeout_ms: 1_000,
+              jitter_range_ms: 1..10
+            ]
           ]
-        ],
-        projection_store: :postgres,
-        projection_store_options: [
-          repo: Incident.ProjectionStore.TestRepo
-        ]
-      ]
+        },
+        projection_store: %{
+          adapter: :postgres,
+          options: [repo: Incident.ProjectionStore.TestRepo]
+        }
+      }
 
       start_supervised!({Incident, config})
 

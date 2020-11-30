@@ -14,12 +14,16 @@ defmodule Incident.EventStore.InMemory.AdapterTest do
   end
 
   setup do
-    config = [
-      event_store: :in_memory,
-      event_store_options: [],
-      projection_store: :in_memory,
-      projection_store_options: []
-    ]
+    config = %{
+      event_store: %{
+        adapter: :in_memory,
+        options: []
+      },
+      projection_store: %{
+        adapter: :in_memory,
+        options: []
+      }
+    }
 
     start_supervised!({Incident, config})
     :ok

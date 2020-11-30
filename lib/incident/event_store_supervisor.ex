@@ -12,15 +12,15 @@ defmodule Incident.EventStoreSupervisor do
   @doc """
   Starts the Event Store Supervisor that monitors the Event Store and Lock Manager.
   """
-  @spec start_link(keyword()) :: Supervisor.on_start()
+  @spec start_link(map()) :: Supervisor.on_start()
   def start_link(config) do
     Supervisor.start_link(__MODULE__, config, name: __MODULE__)
   end
 
   @impl true
-  def init([adapter: adapter, options: options] = config) do
+  def init(%{adapter: adapter, options: options} = config) do
     lock_manager = [lock_manager: lock_manager_for(adapter)]
-    event_store_config = Keyword.update(config, :options, lock_manager, &(&1 ++ lock_manager))
+    event_store_config = Map.update(config, :options, lock_manager, &(&1 ++ lock_manager))
 
     lock_manager_config = Keyword.get(options, :lock_manager_config, [])
 

@@ -4,12 +4,16 @@ defmodule Incident.ProjectionStoreTest do
   alias Incident.ProjectionStore
 
   setup do
-    config = [
-      event_store: :in_memory,
-      event_store_options: [],
-      projection_store: :in_memory,
-      projection_store_options: [initial_state: %{counters: []}]
-    ]
+    config = %{
+      event_store: %{
+        adapter: :in_memory,
+        options: []
+      },
+      projection_store: %{
+        adapter: :in_memory,
+        options: [initial_state: %{counters: []}]
+      }
+    }
 
     start_supervised!({Incident, config})
     :ok

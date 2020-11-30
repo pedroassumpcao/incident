@@ -6,16 +6,16 @@ defmodule Incident.ProjectionStore.Postgres.AdapterTest do
   alias Incident.ProjectionStore.Postgres.Adapter
 
   setup do
-    config = [
-      event_store: :postgres,
-      event_store_options: [
-        repo: Incident.EventStore.TestRepo
-      ],
-      projection_store: :postgres,
-      projection_store_options: [
-        repo: Incident.ProjectionStore.TestRepo
-      ]
-    ]
+    config = %{
+      event_store: %{
+        adapter: :postgres,
+        options: [repo: Incident.EventStore.TestRepo]
+      },
+      projection_store: %{
+        adapter: :postgres,
+        options: [repo: Incident.ProjectionStore.TestRepo]
+      }
+    }
 
     start_supervised!({Incident, config})
     :ok
