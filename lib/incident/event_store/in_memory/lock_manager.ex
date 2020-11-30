@@ -25,7 +25,7 @@ defmodule Incident.EventStore.InMemory.LockManager do
       jitter_range_ms: Keyword.get(opts, :jitter_range_ms, @default_jitter_range_ms)
     ]
 
-    GenServer.start_link(__MODULE__, %{config: config, locks: []})
+    GenServer.start_link(__MODULE__, %{config: config, locks: []}, name: __MODULE__)
   end
 
   @doc """
@@ -33,17 +33,17 @@ defmodule Incident.EventStore.InMemory.LockManager do
   It uses the lock manager configuration for retry logic. In case the lock can't be acquired after all
   retry attempts, it will return an error.
   """
-  @spec acquire_lock(pid(), aggregate_id()) :: lock_acquisition_response()
-  def acquire_lock(server, aggregate_id) do
-    GenServer.call(server, {:acquire_lock, aggregate_id})
+  @spec acquire_lock(aggregate_id()) :: lock_acquisition_response()
+  def acquire_lock(aggregate_id) do
+    GenServer.call(__MODULE__, {:acquire_lock, aggregate_id})
   end
 
   @doc """
   Removes the lock for the aggregate id that belongs to the caller.
   """
-  @spec release_lock(pid(), aggregate_id()) :: :ok
-  def release_lock(server, aggregate_id) do
-    GenServer.call(server, {:release_lock, aggregate_id})
+  @spec release_lock(aggregate_id()) :: :ok
+  def release_lock(aggregate_id) do
+    GenServer.call(__MODULE__, {:release_lock, aggregate_id})
   end
 
   @impl GenServer
