@@ -10,14 +10,21 @@ defmodule BankInMemoryTest do
     use Application
 
     def start(_type, _args) do
+      config = %{
+        event_store: %{
+          adapter: :in_memory,
+          options: []
+        },
+        projection_store: %{
+          adapter: :in_memory,
+          options: [
+            initial_state: %{Bank.Projections.BankAccount => [], Bank.Projections.Transfer => []}
+          ]
+        }
+      }
+
       children = [
-        {Incident,
-         event_store: :in_memory,
-         event_store_options: [],
-         projection_store: :in_memory,
-         projection_store_options: [
-           initial_state: %{Bank.Projections.BankAccount => [], Bank.Projections.Transfer => []}
-         ]}
+        {Incident, config}
       ]
 
       opts = [strategy: :one_for_one, name: Bank.Supervisor]
