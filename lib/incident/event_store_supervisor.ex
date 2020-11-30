@@ -6,32 +6,34 @@ defmodule Incident.EventStoreSupervisor do
   alias Incident.EventStore
   alias Incident.EventStore.{InMemory, Postgres}
 
+  @type adapter :: InMemory.Adapter | Postgres.Adapter
   @type lock_manager :: InMemory.LockManager | Postgres.LockManager
 
   @doc """
   Starts the Event Store Supervisor that monitors the Event Store and Lock Manager.
   """
+  @spec start_link(keyword()) :: Supervisor.on_start()
   def start_link(config) do
     Supervisor.start_link(__MODULE__, config, name: __MODULE__)
   end
 
   @impl true
-  def init(config) do
-    lock_manager_options = [lock_manager: lock_manager(config)]
-    config = Keyword.update(config, :options, lock_manager_options, &(&1 ++ lock_manager_options))
+  def init([adapter: adapter, options: options] = config) do
+    lock_manager = [lock_manager: lock_manager_for(adapter)]
+    event_store_config = Keyword.update(config, :options, lock_manager, &(&1 ++ lock_manager))
+
+    lock_manager_config = Keyword.get(options, :lock_manager_config, [])
 
     children = [
-      {EventStore, config}
+      {lock_manager_for(adapter), lock_manager_config},
+      {EventStore, event_store_config}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
   end
 
-  @spec lock_manager(keyword()) :: lock_manager()
-  defp lock_manager(config) do
-    case Keyword.get(config, :adapter) do
-      Postgres.Adapter -> Postgres.LockManager
-      InMemory.Adapter -> InMemory.LockManager
-    end
-  end
+  @spec lock_manager_for(adapter()) :: lock_manager()
+  defp lock_manager_for(Postgres.Adapter), do: Postgres.LockManager
+
+  defp lock_manager_for(InMemory.Adapter), do: InMemory.LockManager
 end
