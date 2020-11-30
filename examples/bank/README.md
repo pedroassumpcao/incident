@@ -59,27 +59,30 @@ mix ecto.migrate
 `Incident` is defined in `application.ex`, being added into the application supervision tree:
 
 ```
-defmodule AppName.Application do
+defmodule Bank.Application do
   @moduledoc false
 
   use Application
 
   def start(_type, _args) do
+    config = %{
+      event_store: %{
+        adapter: :postgres,
+        options: [repo: Bank.EventStoreRepo]
+      },
+      projection_store: %{
+        adapter: :postgres,
+        options: [repo: Bank.ProjectionStoreRepo]
+      }
+    }
+
     children = [
-      AppName.EventStoreRepo,
-      AppName.ProjectionStoreRepo,
-      {Incident,
-       event_store: :postgres,
-       event_store_options: [
-         repo: AppName.EventStoreRepo
-       ],
-       projection_store: :postgres,
-       projection_store_options: [
-         repo: AppName.ProjectionStoreRepo
-       ]}
+      Bank.EventStoreRepo,
+      Bank.ProjectionStoreRepo,
+      {Incident, config}
     ]
 
-    opts = [strategy: :one_for_one, name: AppName.Supervisor]
+    opts = [strategy: :one_for_one, name: Bank.Supervisor]
     Supervisor.start_link(children, opts)
   end
 end

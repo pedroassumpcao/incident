@@ -164,7 +164,8 @@ Create the application databases running the Ecto mix task:
 mix ecto.create
 ```
 
-Use the Incident Mix Task below to generate the events table migration, after that, run the migration task:
+Use the Incident Mix Task below to generate the `events` and `aggregate_locks` table migrations, after
+that, run the migration task:
 
 ```
 mix incident.postgres.init -r AppName.EventStoreRepo
@@ -183,18 +184,21 @@ defmodule AppName.Application do
   use Application
 
   def start(_type, _args) do
+    config = %{
+      event_store: %{
+        adapter: :postgres,
+        options: [repo: AppName.EventStoreRepo]
+      },
+      projection_store: %{
+        adapter: :postgres,
+        options: [repo: AppName.ProjectionStoreRepo]
+      }
+    }
+
     children = [
       AppName.EventStoreRepo,
       AppName.ProjectionStoreRepo,
-      {Incident,
-       event_store: :postgres,
-       event_store_options: [
-         repo: AppName.EventStoreRepo
-       ],
-       projection_store: :postgres,
-       projection_store_options: [
-         repo: AppName.ProjectionStoreRepo
-       ]}
+      {Incident, config}
     ]
 
     opts = [strategy: :one_for_one, name: AppName.Supervisor]
@@ -214,14 +218,21 @@ defmodule AppName.Application do
   use Application
 
   def start(_type, _args) do
+    config = %{
+      event_store: %{
+        adapter: :in_memory,
+        options: []
+      },
+      projection_store: %{
+        adapter: :in_memory,
+        options: [
+          initial_state: %{AppName.Projections.ProjectionName => []}
+        ]
+      }
+    }
+
     children = [
-      {Incident,
-       event_store: :in_memory,
-       event_store_options: [],
-       projection_store: :in_memory,
-       projection_store_options: [
-         initial_state: %{AppName.Projections.ProjectionName => []}
-       ]}
+      {Incident, config}
     ]
 
     opts = [strategy: :one_for_one, name: AppName.Supervisor]
@@ -236,7 +247,6 @@ The list below is the upcoming enhacements or fixes, it will grow as the library
 
 - [ ] allow Incident to be used by more than one application within the umbrella, if needed;
 - [ ] add Telemetry module and trigger telemetry events;
-- [ ] standardize and document approach for dealing with stale commands and/or race conditions;
 - [ ] run migrations when using `mix incident.postgres.init` for `Postgres` adapter;
 - [ ] allow custom error modules to be used and incorporate as part of the contract in some components;
 
