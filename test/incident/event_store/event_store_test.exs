@@ -56,4 +56,18 @@ defmodule Incident.EventStoreTest do
       assert [] = EventStore.get(UUID.generate())
     end
   end
+
+  describe "acquire_lock/1" do
+    test "attempts to acquire a lock for the aggregate" do
+      assert :ok = EventStore.acquire_lock(@aggregate_id)
+    end
+  end
+
+  describe "release_lock/1" do
+    test "releases an aggregate lock" do
+      assert :ok = EventStore.acquire_lock(@aggregate_id)
+      assert :ok = EventStore.release_lock(@aggregate_id)
+      assert :ok = EventStore.acquire_lock(@aggregate_id)
+    end
+  end
 end

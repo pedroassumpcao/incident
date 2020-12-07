@@ -20,7 +20,7 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
 
       start_supervised!({Incident, config})
 
-      assert :ok = LockManager.acquire_lock(@aggregate_id)
+      assert :ok = LockManager.acquire_lock(@aggregate_id, self())
     end
 
     test "auto removes the lock after lock timeout" do
@@ -43,9 +43,9 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
 
       start_supervised!({Incident, config})
 
-      assert :ok = LockManager.acquire_lock(@aggregate_id)
+      assert :ok = LockManager.acquire_lock(@aggregate_id, self())
       :timer.sleep(timeout_ms + 1)
-      assert :ok = LockManager.acquire_lock(@aggregate_id)
+      assert :ok = LockManager.acquire_lock(@aggregate_id, self())
     end
 
     test "returns `:ok` when lock exist but it is expired" do
@@ -66,8 +66,8 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
 
       start_supervised!({Incident, config})
 
-      assert :ok = LockManager.acquire_lock(@aggregate_id)
-      assert :ok = LockManager.acquire_lock(@aggregate_id)
+      assert :ok = LockManager.acquire_lock(@aggregate_id, self())
+      assert :ok = LockManager.acquire_lock(@aggregate_id, self())
     end
 
     test "returns `:ok` eventually after retries" do
@@ -90,8 +90,8 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
 
       start_supervised!({Incident, config})
 
-      assert :ok = LockManager.acquire_lock(@aggregate_id)
-      assert :ok = LockManager.acquire_lock(@aggregate_id)
+      assert :ok = LockManager.acquire_lock(@aggregate_id, self())
+      assert :ok = LockManager.acquire_lock(@aggregate_id, self())
     end
 
     test "returns `{:eror, :already_locked}` when lock is in use" do
@@ -113,8 +113,8 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
 
       start_supervised!({Incident, config})
 
-      assert :ok = LockManager.acquire_lock(@aggregate_id)
-      assert {:error, :already_locked} = LockManager.acquire_lock(@aggregate_id)
+      assert :ok = LockManager.acquire_lock(@aggregate_id, self())
+      assert {:error, :already_locked} = LockManager.acquire_lock(@aggregate_id, self())
     end
 
     test "returns `{:eror, :failed_to_lock}` when retries are not positive" do
@@ -135,7 +135,7 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
 
       start_supervised!({Incident, config})
 
-      assert {:error, :failed_to_lock} = LockManager.acquire_lock(@aggregate_id)
+      assert {:error, :failed_to_lock} = LockManager.acquire_lock(@aggregate_id, self())
     end
   end
 
@@ -159,10 +159,10 @@ defmodule Incident.EventStore.InMemory.LockManagerTest do
 
       start_supervised!({Incident, config})
 
-      assert :ok = LockManager.acquire_lock(@aggregate_id)
-      assert {:error, :already_locked} = LockManager.acquire_lock(@aggregate_id)
-      assert :ok = LockManager.release_lock(@aggregate_id)
-      assert :ok = LockManager.acquire_lock(@aggregate_id)
+      assert :ok = LockManager.acquire_lock(@aggregate_id, self())
+      assert {:error, :already_locked} = LockManager.acquire_lock(@aggregate_id, self())
+      assert :ok = LockManager.release_lock(@aggregate_id, self())
+      assert :ok = LockManager.acquire_lock(@aggregate_id, self())
     end
   end
 end

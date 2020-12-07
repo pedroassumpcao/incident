@@ -12,9 +12,9 @@ defmodule Incident.EventStore do
   end
 
   @impl true
-  def init(%{adapter: adapter, options: options}) do
+  def init(%{adapter: adapter, options: options} = config) do
     adapter.start_link(options)
-    {:ok, %{adapter: adapter}}
+    {:ok, config}
   end
 
   @doc false
@@ -25,6 +25,18 @@ defmodule Incident.EventStore do
   @doc false
   def append(event) do
     GenServer.call(__MODULE__, {:append, event})
+  end
+
+  @doc false
+  def acquire_lock(aggregate_id, owner) do
+    %{options: options} = :sys.get_state(__MODULE__)
+    options[:lock_manager].acquire_lock(aggregate_id, owner)
+  end
+
+  @doc false
+  def release_lock(aggregate_id, owner) do
+    %{options: options} = :sys.get_state(__MODULE__)
+    options[:lock_manager].release_lock(aggregate_id, owner)
   end
 
   @impl true

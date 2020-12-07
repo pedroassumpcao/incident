@@ -36,17 +36,27 @@ defmodule Incident.EventStore.Postgres.LockManager do
   It uses the lock manager configuration for retry logic. In case the lock can't be acquired after all
   retry attempts, it will return an error.
   """
-  @spec acquire_lock(aggregate_id()) :: lock_acquisition_response()
-  def acquire_lock(aggregate_id) do
-    GenServer.call(__MODULE__, {:acquire_lock, aggregate_id})
+  @spec acquire_lock(aggregate_id(), pid()) :: lock_acquisition_response()
+  def acquire_lock(aggregate_id, owner) do
+    GenServer.call(__MODULE__, {:acquire_lock, aggregate_id, owner}, :infinity)
   end
 
   @doc """
   Removes the lock for the aggregate id that belongs to the caller.
   """
-  @spec release_lock(aggregate_id()) :: :ok
-  def release_lock(aggregate_id) do
-    GenServer.call(__MODULE__, {:release_lock, aggregate_id})
+  @spec release_lock(aggregate_id(), pid()) :: :ok
+  def release_lock(aggregate_id, owner) do
+    owner_id = :erlang.phash2(owner)
+
+    query =
+      from(
+        al in AggregateLock,
+        where: al.aggregate_id == ^aggregate_id,
+        where: al.owner_id == ^owner_id
+      )
+
+    Adapter.repo().delete_all(query)
+    :ok
   end
 
   @impl GenServer
@@ -55,7 +65,7 @@ defmodule Incident.EventStore.Postgres.LockManager do
   end
 
   @impl GenServer
-  def handle_call({:acquire_lock, aggregate_id}, {owner, _ref}, %{config: config} = state) do
+  def handle_call({:acquire_lock, aggregate_id, owner}, _from, %{config: config} = state) do
     reply =
       case do_acquire_lock(aggregate_id, owner, config, config[:retries]) do
         :ok ->
@@ -70,27 +80,12 @@ defmodule Incident.EventStore.Postgres.LockManager do
   end
 
   @impl GenServer
-  def handle_call({:release_lock, aggregate_id}, {owner, _ref}, state) do
-    owner_id = :erlang.phash2(owner)
-
-    query =
-      from(
-        al in AggregateLock,
-        where: al.aggregate_id == ^aggregate_id,
-        where: al.owner_id == ^owner_id
-      )
-
-    Adapter.repo().delete_all(query)
-
-    {:reply, :ok, state}
-  end
-
-  @impl GenServer
   def handle_info({:auto_release_lock, aggregate_id}, state) do
     query =
       from(
         al in AggregateLock,
-        where: al.aggregate_id == ^aggregate_id
+        where: al.aggregate_id == ^aggregate_id,
+        where: al.valid_until < ^DateTime.utc_now()
       )
 
     Adapter.repo().delete_all(query)
@@ -113,26 +108,22 @@ defmodule Incident.EventStore.Postgres.LockManager do
 
     Multi.new()
     |> Multi.run(:changeset, fn repo, _ ->
-      now = DateTime.utc_now()
-
       query =
         from(
           al in AggregateLock,
           where: al.aggregate_id == ^aggregate_id,
-          where: al.valid_until > ^now,
+          where: al.valid_until > ^DateTime.utc_now(),
           limit: 1,
           lock: "FOR UPDATE"
         )
 
       case repo.one(query) do
         nil ->
-          valid_until = DateTime.add(now, config[:timeout_ms], :millisecond)
-
           changeset =
             AggregateLock.changeset(%AggregateLock{}, %{
               aggregate_id: aggregate_id,
               owner_id: :erlang.phash2(owner),
-              valid_until: valid_until
+              valid_until: DateTime.add(DateTime.utc_now(), config[:timeout_ms], :millisecond)
             })
 
           {:ok, changeset}

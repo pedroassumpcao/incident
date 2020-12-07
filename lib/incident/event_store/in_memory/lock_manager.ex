@@ -33,17 +33,17 @@ defmodule Incident.EventStore.InMemory.LockManager do
   It uses the lock manager configuration for retry logic. In case the lock can't be acquired after all
   retry attempts, it will return an error.
   """
-  @spec acquire_lock(aggregate_id()) :: lock_acquisition_response()
-  def acquire_lock(aggregate_id) do
-    GenServer.call(__MODULE__, {:acquire_lock, aggregate_id})
+  @spec acquire_lock(aggregate_id(), pid()) :: lock_acquisition_response()
+  def acquire_lock(aggregate_id, owner) do
+    GenServer.call(__MODULE__, {:acquire_lock, aggregate_id, owner}, :infinity)
   end
 
   @doc """
   Removes the lock for the aggregate id that belongs to the caller.
   """
-  @spec release_lock(aggregate_id()) :: :ok
-  def release_lock(aggregate_id) do
-    GenServer.call(__MODULE__, {:release_lock, aggregate_id})
+  @spec release_lock(aggregate_id(), pid()) :: :ok
+  def release_lock(aggregate_id, owner) do
+    GenServer.call(__MODULE__, {:release_lock, aggregate_id, owner})
   end
 
   @impl GenServer
@@ -52,7 +52,7 @@ defmodule Incident.EventStore.InMemory.LockManager do
   end
 
   @impl GenServer
-  def handle_call({:acquire_lock, aggregate_id}, {owner, _ref}, %{config: config} = state) do
+  def handle_call({:acquire_lock, aggregate_id, owner}, _from, %{config: config} = state) do
     {reply, new_state} =
       case do_acquire_lock(aggregate_id, owner, state, config[:retries]) do
         {:ok, new_state} ->
@@ -67,7 +67,7 @@ defmodule Incident.EventStore.InMemory.LockManager do
   end
 
   @impl GenServer
-  def handle_call({:release_lock, aggregate_id}, {owner, _ref}, %{locks: locks} = state) do
+  def handle_call({:release_lock, aggregate_id, owner}, _from, %{locks: locks} = state) do
     owner_id = :erlang.phash2(owner)
 
     updated_locks = Enum.reject(locks, &(&1.aggregate_id == aggregate_id && &1.owner_id == owner_id))
