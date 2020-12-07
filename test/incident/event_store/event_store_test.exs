@@ -59,15 +59,15 @@ defmodule Incident.EventStoreTest do
 
   describe "acquire_lock/1" do
     test "attempts to acquire a lock for the aggregate" do
-      assert :ok = EventStore.acquire_lock(@aggregate_id)
+      assert :ok = EventStore.acquire_lock(@aggregate_id, self())
     end
   end
 
   describe "release_lock/1" do
     test "releases an aggregate lock" do
-      assert :ok = EventStore.acquire_lock(@aggregate_id)
-      assert :ok = EventStore.release_lock(@aggregate_id)
-      assert :ok = EventStore.acquire_lock(@aggregate_id)
+      assert :ok = EventStore.acquire_lock(@aggregate_id, self())
+      assert :ok = EventStore.release_lock(@aggregate_id, self())
+      assert :ok = EventStore.acquire_lock(@aggregate_id, self())
     end
   end
 end
