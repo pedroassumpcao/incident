@@ -13,13 +13,9 @@ defmodule Incident.EventStore do
 
   @impl true
   def init(%{adapter: adapter, options: options} = config) do
+    :persistent_term.put(__MODULE__, config)
     adapter.start_link(options)
     {:ok, config}
-  end
-
-  @doc false
-  def get(aggregate_id) do
-    GenServer.call(__MODULE__, {:get, aggregate_id})
   end
 
   @doc false
@@ -28,25 +24,30 @@ defmodule Incident.EventStore do
   end
 
   @doc false
+  def get(aggregate_id) do
+    %{adapter: adapter} = :persistent_term.get(__MODULE__)
+    adapter.get(aggregate_id)
+  end
+
+  @doc false
   def acquire_lock(aggregate_id, owner) do
-    %{options: options} = :sys.get_state(__MODULE__)
-    options[:lock_manager].acquire_lock(aggregate_id, owner)
+    lock_manager().acquire_lock(aggregate_id, owner)
   end
 
   @doc false
   def release_lock(aggregate_id, owner) do
-    %{options: options} = :sys.get_state(__MODULE__)
-    options[:lock_manager].release_lock(aggregate_id, owner)
+    lock_manager().release_lock(aggregate_id, owner)
   end
 
   @impl true
-  def handle_call({:get, aggregate_id}, _from, %{adapter: adapter} = state) do
-    events = adapter.get(aggregate_id)
-    {:reply, events, state}
-  end
-
   def handle_call({:append, event}, _from, %{adapter: adapter} = state) do
     reply = adapter.append(event)
     {:reply, reply, state}
+  end
+
+  @spec lock_manager :: Incident.EventStoreSupervisor.lock_manager()
+  defp lock_manager do
+    %{options: options} = :persistent_term.get(__MODULE__)
+    Keyword.fetch!(options, :lock_manager)
   end
 end
