@@ -1,23 +1,15 @@
 defmodule BankPostgresTest do
-  use Bank.RepoCase, async: true
+  use Bank.RepoCase
 
   alias Bank.{BankAccountCommandHandler, TransferCommandHandler}
   alias Bank.Commands.{DepositMoney, OpenAccount, RequestTransfer, WithdrawMoney}
   alias Bank.Projections.{BankAccount, Transfer}
   alias Ecto.UUID
 
-  setup_all do
-    on_exit(fn ->
-      :ok = Application.stop(:incident)
-
-      {:ok, _apps} = Application.ensure_all_started(:incident)
-    end)
-  end
-
   @default_amount 100
   @account_number UUID.generate()
   @account_number2 UUID.generate()
-  @command_open_account %OpenAccount{account_number: @account_number}
+  @command_open_account %OpenAccount{aggregate_id: @account_number}
   @command_deposit_money %DepositMoney{aggregate_id: @account_number, amount: @default_amount}
   @command_withdraw_money %WithdrawMoney{aggregate_id: @account_number, amount: @default_amount}
 
@@ -47,8 +39,7 @@ defmodule BankPostgresTest do
     test "failing opening an account with same number more than once" do
       assert {:ok, _event} = BankAccountCommandHandler.receive(@command_open_account)
 
-      assert {:error, :account_already_opened} =
-               BankAccountCommandHandler.receive(@command_open_account)
+      assert {:error, :account_already_opened} = BankAccountCommandHandler.receive(@command_open_account)
 
       assert [event] = Incident.EventStore.get(@account_number)
 
@@ -108,8 +99,7 @@ defmodule BankPostgresTest do
     end
 
     test "failing on attempt to deposit money to a non-existing account" do
-      assert {:error, :account_not_found} =
-               BankAccountCommandHandler.receive(@command_deposit_money)
+      assert {:error, :account_not_found} = BankAccountCommandHandler.receive(@command_deposit_money)
     end
 
     test "depositing and withdrawing money from account" do
@@ -153,8 +143,7 @@ defmodule BankPostgresTest do
     test "failing to withdraw more money than the account balance" do
       assert {:ok, _event} = BankAccountCommandHandler.receive(@command_open_account)
 
-      assert {:error, :no_enough_balance} =
-               BankAccountCommandHandler.receive(@command_withdraw_money)
+      assert {:error, :no_enough_balance} = BankAccountCommandHandler.receive(@command_withdraw_money)
 
       assert [event1] = Incident.EventStore.get(@account_number)
 
@@ -176,8 +165,7 @@ defmodule BankPostgresTest do
     end
 
     test "failing on attempt to withdraw money from a non-existing account" do
-      assert {:error, :account_not_found} =
-               BankAccountCommandHandler.receive(@command_withdraw_money)
+      assert {:error, :account_not_found} = BankAccountCommandHandler.receive(@command_withdraw_money)
     end
   end
 
@@ -196,7 +184,7 @@ defmodule BankPostgresTest do
 
       BankAccountCommandHandler.receive(%{
         @command_open_account
-        | account_number: @account_number2
+        | aggregate_id: @account_number2
       })
 
       :ok
@@ -236,8 +224,7 @@ defmodule BankPostgresTest do
     test "does not transfer money when there is no enough balance" do
       over_amount = @default_amount + 1
 
-      assert {:ok, _event} =
-               TransferCommandHandler.receive(%{@command_request_transfer | amount: over_amount})
+      assert {:ok, _event} = TransferCommandHandler.receive(%{@command_request_transfer | amount: over_amount})
 
       assert [event1, event2] = Incident.EventStore.get(@transfer_id)
 

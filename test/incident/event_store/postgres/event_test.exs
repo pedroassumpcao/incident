@@ -1,8 +1,8 @@
-defmodule Incident.EventStore.InMemoryEventTest do
+defmodule Incident.EventStore.Postgres.EventTest do
   use Incident.RepoCase, async: true
 
   alias Ecto.UUID
-  alias Incident.EventStore.InMemoryEvent
+  alias Incident.EventStore.Postgres.Event
 
   @valid_params %{
     event_id: UUID.generate(),
@@ -15,13 +15,13 @@ defmodule Incident.EventStore.InMemoryEventTest do
 
   describe "changeset/2" do
     test "returns a valid changeset when all fields are valid" do
-      changeset = InMemoryEvent.changeset(%InMemoryEvent{}, @valid_params)
+      changeset = Event.changeset(%Event{}, @valid_params)
 
       assert changeset.valid?
     end
 
     test "returns an error when a required field is not present" do
-      changeset = InMemoryEvent.changeset(%InMemoryEvent{}, %{})
+      changeset = Event.changeset(%Event{}, %{})
 
       refute changeset.valid?
       assert %{event_id: ["can't be blank"]} = errors_on(changeset)
@@ -34,7 +34,7 @@ defmodule Incident.EventStore.InMemoryEventTest do
 
     test "returns an error when a field is set with a wront type" do
       invalid_params = Map.merge(@valid_params, %{event_date: "2010-04-11"})
-      changeset = InMemoryEvent.changeset(%InMemoryEvent{}, invalid_params)
+      changeset = Event.changeset(%Event{}, invalid_params)
 
       refute changeset.valid?
       assert %{event_date: ["is invalid"]} = errors_on(changeset)

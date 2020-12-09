@@ -1,33 +1,46 @@
-defmodule Incident.EventStore.InMemoryAdapter do
+defmodule Incident.EventStore.Postgres.Adapter do
   @moduledoc """
-  Implements an in-memory Event Store using Agents.
+  Implements an Event Store using Postgres through Ecto.
   """
 
   @behaviour Incident.EventStore.Adapter
 
-  use Agent
+  use GenServer
 
-  alias Incident.EventStore.InMemoryEvent
+  import Ecto.Query, only: [from: 2]
+
+  alias Incident.EventStore.Postgres.Event
 
   @spec start_link(keyword) :: GenServer.on_start()
   def start_link(opts \\ []) do
-    initial_state = Keyword.get(opts, :initial_state, [])
-
-    Agent.start_link(fn -> initial_state end, name: __MODULE__)
+    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  @impl true
+  @impl GenServer
+  def init(opts) do
+    {:ok, opts}
+  end
+
+  @impl GenServer
+  def handle_call(:repo, _from, state) do
+    {:reply, state[:repo], state}
+  end
+
+  @impl Incident.EventStore.Adapter
   def get(aggregate_id) do
-    __MODULE__
-    |> Agent.get(& &1)
-    |> Enum.filter(&(&1.aggregate_id == aggregate_id))
-    |> Enum.sort(&(&1.id < &2.id))
+    query =
+      from(
+        e in Event,
+        where: e.aggregate_id == ^aggregate_id,
+        order_by: [asc: e.id]
+      )
+
+    repo().all(query)
   end
 
-  @impl true
+  @impl Incident.EventStore.Adapter
   def append(event) do
-    persisted_event = %InMemoryEvent{
-      id: :erlang.unique_integer([:positive, :monotonic]),
+    new_event = %{
       event_id: Ecto.UUID.generate(),
       aggregate_id: event.aggregate_id,
       event_type: event.__struct__ |> Module.split() |> List.last(),
@@ -36,9 +49,14 @@ defmodule Incident.EventStore.InMemoryAdapter do
       event_data: event |> Map.from_struct() |> stringify_keys()
     }
 
-    Agent.update(__MODULE__, &([persisted_event] ++ &1))
+    %Event{}
+    |> Event.changeset(new_event)
+    |> repo().insert()
+  end
 
-    {:ok, persisted_event}
+  @spec repo :: module()
+  def repo do
+    GenServer.call(__MODULE__, :repo)
   end
 
   @spec stringify_keys(map) :: map

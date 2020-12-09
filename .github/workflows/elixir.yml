@@ -61,4 +61,4 @@ jobs:
           mkdir -p priv/plts
           mix dialyzer --plt
       - name: Run Dialyzer
-        run: mix dialyzer --no-check --list-unused-filters
+        run: mix dialyzer

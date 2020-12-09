@@ -3,13 +3,13 @@ defmodule Incident.EventStore.Adapter do
   Defines the API for an Event Store adapter.
   """
 
-  alias Incident.EventStore.{InMemoryEvent, PostgresEvent}
+  alias Incident.EventStore.{InMemory, Postgres}
 
   @typedoc """
   Depending the adapter used to store the events, the persisted event
   will be defined by a different schema.
   """
-  @type persisted_event :: InMemoryEvent.t() | PostgresEvent.t()
+  @type persisted_event :: InMemory.Event.t() | Postgres.Event.t()
 
   @doc """
   Receives an aggregate id and returns a list containing all persisted events from the Event Store.

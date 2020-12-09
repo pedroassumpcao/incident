@@ -5,10 +5,10 @@ defmodule Bank.Commands.OpenAccount do
 
   @behaviour Incident.Command
 
-  defstruct [:account_number]
+  defstruct [:aggregate_id]
 
   @impl true
   def valid?(command) do
-    not is_nil(command.account_number)
+    not is_nil(command.aggregate_id)
   end
 end

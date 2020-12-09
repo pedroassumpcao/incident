@@ -2,9 +2,10 @@ defmodule Mix.Tasks.Incident.Postgres.Init do
   @moduledoc """
   This task will generate some basic setup when using `PostgresAdapter`.
 
-  When using this adapter you will need to have a table to store the events.
-  This task will generate an `Ecto` migration to create the `events` table with the needed
-  columns and indexes. The task will respect your `Ecto` configuration for your `EventStoreRepo`.
+  When using this adapter you will need to have a table to store the events and aggregate locks.
+  This task will generate an `Ecto` migration to create the `events` and `aggregate_locks` table
+  with the needed columns and indexes. The task will respect your `Ecto` configuration for your
+  `EventStoreRepo`.
 
   # Usage
   ```
@@ -18,7 +19,7 @@ defmodule Mix.Tasks.Incident.Postgres.Init do
   import Macro, only: [camelize: 1, underscore: 1]
   import Mix.{Ecto, Generator}
 
-  @shortdoc "Generates the initial setup for incident"
+  @shortdoc "Generates the initial setup for Incident with Postgres Adapter"
   @impl true
   def run(["-r", repo]) do
     no_umbrella!("incident.postgres.init")
@@ -28,6 +29,7 @@ defmodule Mix.Tasks.Incident.Postgres.Init do
       |> Module.concat()
       |> ensure_repo([])
 
+    # Generates the events table migration
     name = "create_events_table"
     path = Path.relative_to(migrations_path(event_store_repo), Mix.Project.app_path())
     file = Path.join(path, "#{timestamp()}_#{underscore(name)}.exs")
@@ -35,7 +37,19 @@ defmodule Mix.Tasks.Incident.Postgres.Init do
 
     content =
       [module_name: Module.concat([event_store_repo, Migrations, camelize(name)])]
-      |> migration_template
+      |> events_migration_template()
+      |> Code.format_string!()
+
+    create_file(file, content)
+
+    # Generates the aggregate_locks table migration
+    name = "create_aggregate_locks_table"
+    path = Path.relative_to(migrations_path(event_store_repo), Mix.Project.app_path())
+    file = Path.join(path, "#{timestamp()}_#{underscore(name)}.exs")
+
+    content =
+      [module_name: Module.concat([event_store_repo, Migrations, camelize(name)])]
+      |> aggregate_locks_migration_template()
       |> Code.format_string!()
 
     create_file(file, content)
@@ -65,7 +79,7 @@ defmodule Mix.Tasks.Incident.Postgres.Init do
   defp pad(i) when i < 10, do: <<?0, ?0 + i>>
   defp pad(i), do: to_string(i)
 
-  embed_template(:migration, """
+  embed_template(:events_migration, """
     defmodule <%= inspect @module_name %> do
       use Ecto.Migration
       def change do
@@ -86,6 +100,24 @@ defmodule Mix.Tasks.Incident.Postgres.Init do
         create(index(:events, [:event_date]))
         create(index(:events, [:version]))
         create constraint(:events, :version_must_be_positive, check: "version > 0")
+      end
+    end
+  """)
+
+  embed_template(:aggregate_locks_migration, """
+    defmodule <%= inspect @module_name %> do
+      use Ecto.Migration
+      def change do
+        create table(:aggregate_locks, primary_key: false) do
+          add(:id, :bigserial, primary_key: true)
+          add(:aggregate_id, :string, null: false)
+          add(:owner_id, :integer, null: false)
+          add(:valid_until, :utc_datetime_usec, null: false)
+        end
+
+        create(index(:aggregate_locks, [:aggregate_id]))
+        create(index(:aggregate_locks, [:aggregate_id, :owner_id]))
+        create(index(:aggregate_locks, [:valid_until]))
       end
     end
   """)

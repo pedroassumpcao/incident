@@ -1,5 +1,5 @@
 defmodule Incident.AggregateTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   alias Ecto.UUID
 
@@ -25,17 +25,31 @@ defmodule Incident.AggregateTest do
     end
   end
 
+  setup do
+    config = %{
+      event_store: %{
+        adapter: :in_memory,
+        options: []
+      },
+      projection_store: %{
+        adapter: :in_memory,
+        options: []
+      }
+    }
+
+    start_supervised!({Incident, config})
+    :ok
+  end
+
   @aggregate_id UUID.generate()
 
   describe "execute/1" do
     test "returns `:ok` if the command is successfully exectued" do
-      assert :ok =
-               Counter.execute(%AddCounter{aggregate_id: @aggregate_id, amount: 1, version: 1})
+      assert :ok = Counter.execute(%AddCounter{aggregate_id: @aggregate_id, amount: 1, version: 1})
     end
 
     test "returns an error and reason if the command can't be executed" do
-      assert {:error, :invalid_command} =
-               Counter.execute(%{aggregate_id: @aggregate_id, amount: 1, version: 1})
+      assert {:error, :invalid_command} = Counter.execute(%{aggregate_id: @aggregate_id, amount: 1, version: 1})
     end
   end
 

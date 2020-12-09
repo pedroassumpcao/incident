@@ -32,8 +32,10 @@ defmodule Incident.CommandHandler do
         command_module = command.__struct__
 
         with true <- command_module.valid?(command),
+             :ok <- EventStore.acquire_lock(command.aggregate_id, self()),
              {:ok, new_event, state} <- unquote(aggregate).execute(command),
              {:ok, persisted_event} <- EventStore.append(new_event),
+             :ok <- EventStore.release_lock(command.aggregate_id, self()),
              {:ok, _projected_event} <- unquote(event_handler).listen(persisted_event, state) do
           {:ok, persisted_event}
         else

@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [0.6.0] - 2020-12-10
+
+### Added
+
+#### Library
+
+- Handle race conditions and concurrent scenarios during command execution;
+- Add `EventStoreSupervisor` to supervise `EventStore` adapters and `LockManager`;
+- Add `AggregateLock` schema to hold lock data;
+
+#### Bank Example Application
+
+- Add integration tests that exercise concurrency and race conditions;
+
+### Changed
+
+#### Library
+
+- Change how `Incident` is configured and added in the application supervision tree;
+- Update `mix incident.postgres.init` to include migration for `aggregate_locks` table;
+- Update documentation regarding library configuration and usage;
+- Update package dependencies;
+
+#### Bank Example Application
+
+- Update documentation regarding library configuration and usage;
+
 ## [0.5.1] - 2020-11-03
 
 ### Changed
@@ -10,7 +37,7 @@ All notable changes to this project will be documented in this file. The format 
 
 - Add `id` for the in memory event data structure;
 - Sort events by `id` in the Event Store `Postgres` and `InMemory` adapters to ensure proper event ordering;
-- Removed `updated_at` column from `events` table in the `mix incident.postgres.init` task;
+- Remove `updated_at` column from `events` table in the `mix incident.postgres.init` task;
 - Update documentation;
 - Update package dependencies;
 
@@ -46,7 +73,7 @@ allows a series of **Event -> Command -> Event** to be built;
 
 #### Bank Example Application
 
-- `Bank.EventHandler` was renamed to `Bank.BankAccountEventHandler` to make it clear that this
+- Rename `Bank.EventHandler` to `Bank.BankAccountEventHandler` to make it clear that this
 handler is only for the `BankAccount` aggregate events as now we have more than one aggregate;
 - Set Elixir minimum version to 1.8;
 

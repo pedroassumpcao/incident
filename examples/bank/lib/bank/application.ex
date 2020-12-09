@@ -4,9 +4,21 @@ defmodule Bank.Application do
   use Application
 
   def start(_type, _args) do
+    config = %{
+      event_store: %{
+        adapter: :postgres,
+        options: [repo: Bank.EventStoreRepo]
+      },
+      projection_store: %{
+        adapter: :postgres,
+        options: [repo: Bank.ProjectionStoreRepo]
+      }
+    }
+
     children = [
       Bank.EventStoreRepo,
-      Bank.ProjectionStoreRepo
+      Bank.ProjectionStoreRepo,
+      {Incident, config}
     ]
 
     opts = [strategy: :one_for_one, name: Bank.Supervisor]

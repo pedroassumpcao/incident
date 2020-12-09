@@ -6,15 +6,13 @@ defmodule Incident.MixProject do
   def project do
     [
       app: :incident,
-      version: "0.5.1",
+      version: "0.6.0",
       elixir: "~> 1.8",
       elixirc_paths: elixirc_paths(Mix.env()),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      dialyzer: [
-        plt_add_apps: [:eex, :ex_unit, :mix]
-      ],
+      dialyzer: dialyzer(),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
@@ -34,8 +32,7 @@ defmodule Incident.MixProject do
 
   def application do
     [
-      extra_applications: [:logger],
-      mod: {Incident.Application, []}
+      extra_applications: [:logger]
     ]
   end
 
@@ -74,6 +71,13 @@ defmodule Incident.MixProject do
         "dialyzer"
       ],
       test: ["ecto.create --quiet", "ecto.migrate", "test"]
+    ]
+  end
+
+  defp dialyzer do
+    [
+      ignore_warnings: ".dialyzer_ignore.exs",
+      plt_add_apps: [:eex, :ex_unit, :mix]
     ]
   end
 end

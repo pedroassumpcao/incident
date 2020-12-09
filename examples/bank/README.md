@@ -16,32 +16,20 @@ more commands, events, aggregates and handlers. The integration tests in this ap
 details of all allowed operations and it is a very good place to understand how the application impelements
 Event Sourcing using Incident.
 
-### Event Store and Projection Store Setup
+#### Setup
 
-Configure `incident` **Event Store** and **Projection Store** adapters and its options. The options will
-be used during the adapter initialization.
+`Incident` is added to the application supervision tree with the adapter configuration for both **Event Store**
+and **Projection Store**.
 
-#### Postgres Adapter Configuration
+#### Postgres Adapters
 
-The Postgres Adapter uses `Ecto`, so we need some Ecto configuration as well some configuration that will
-define the database repositories for both Event Store and Projection Store.
+The Postgres adapter uses `Ecto` behind the scenes so a lot of its configuration it is simply how you should
+configure a Postgres database for any application using Ecto.
 
 In the main `config.exs`:
 
 ```elixir
 config :bank, ecto_repos: [Bank.EventStoreRepo, Bank.ProjectionStoreRepo]
-
-config :incident, :event_store,
-  adapter: Incident.EventStore.PostgresAdapter,
-  options: [
-    repo: Bank.EventStoreRepo
-  ]
-
-config :incident, :projection_store,
-  adapter: Incident.ProjectionStore.PostgresAdapter,
-  options: [
-    repo: Bank.ProjectionStoreRepo
-  ]
 ```
 
 In the application `dev.exs`:
@@ -66,6 +54,38 @@ mix tasks for the final database setup:
 ```
 mix ecto.create
 mix ecto.migrate
+```
+
+`Incident` is defined in `application.ex`, being added into the application supervision tree:
+
+```
+defmodule Bank.Application do
+  @moduledoc false
+
+  use Application
+
+  def start(_type, _args) do
+    config = %{
+      event_store: %{
+        adapter: :postgres,
+        options: [repo: Bank.EventStoreRepo]
+      },
+      projection_store: %{
+        adapter: :postgres,
+        options: [repo: Bank.ProjectionStoreRepo]
+      }
+    }
+
+    children = [
+      Bank.EventStoreRepo,
+      Bank.ProjectionStoreRepo,
+      {Incident, config}
+    ]
+
+    opts = [strategy: :one_for_one, name: Bank.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
 ```
 
 #### Commands
