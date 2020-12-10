@@ -98,11 +98,11 @@ implemented using basic Elixir structs or leveraging `Ecto.Schema` with embedded
 defmodule Bank.Commands.OpenAccount do
   @behaviour Incident.Command
 
-  defstruct [:account_number]
+  defstruct [:aggregate_id]
 
   @impl true
   def valid?(command) do
-    not is_nil(command.account_number)
+    not is_nil(command.aggregate_id)
   end
 end
 
@@ -229,12 +229,12 @@ defmodule Bank.BankAccount do
   alias Bank.Events.{AccountOpened, MoneyDeposited, MoneyWithdrawn}
 
   @impl true
-  def execute(%OpenAccount{account_number: account_number}) do
-    case BankAccountState.get(account_number) do
-      %{account_number: nil} = state ->
+  def execute(%OpenAccount{aggregate_id: aggregate_id}) do
+    case BankAccountState.get(aggregate_id) do
+      %{aggregate_id: nil} = state ->
         new_event = %AccountOpened{
-          aggregate_id: account_number,
-          account_number: account_number,
+          aggregate_id: aggregate_id,
+          account_number: aggregate_id,
           version: 1
         }
 
@@ -438,8 +438,8 @@ end
 
 ```elixir
 # Create a command to open an account
-iex 1 > command_open = %Bank.Commands.OpenAccount{account_number: "abc"}
-%Bank.Commands.OpenAccount{account_number: "abc"}
+iex 1 > command_open = %Bank.Commands.OpenAccount{aggregate_id: "abc"}
+%Bank.Commands.OpenAccount{aggregate_id: "abc"}
 
 # Create a command to deposit money for an aggregate
 iex 2 > command_deposit = %Bank.Commands.DepositMoney{aggregate_id: "abc", amount: 100}
