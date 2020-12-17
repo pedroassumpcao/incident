@@ -247,6 +247,7 @@ The list below is the upcoming enhacements or fixes, it will grow as the library
 
 - [ ] allow Incident to be used by more than one application within the umbrella, if needed;
 - [ ] add Telemetry module and trigger telemetry events;
+- [ ] add Event Snapshots to improve performance for aggregates with long event history;
 - [ ] run migrations when using `mix incident.postgres.init` for `Postgres` adapter;
 - [ ] allow custom error modules to be used and incorporate as part of the contract in some components;
 
