@@ -26,6 +26,7 @@ defmodule Bank.MixProject do
 
   defp deps do
     [
+      {:benchee, "~> 1.0", only: :dev},
       {:dialyxir, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:incident, path: "../.."}
     ]
