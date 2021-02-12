@@ -160,14 +160,14 @@ config :app_name, AppName.ProjectionStoreRepo,
 
 Create the application databases running the Ecto mix task:
 
-```
+```bash
 mix ecto.create
 ```
 
 Use the Incident Mix Task below to generate the `events` and `aggregate_locks` table migrations, after
 that, run the migration task:
 
-```
+```bash
 mix incident.postgres.init -r AppName.EventStoreRepo
 mix ecto.migrate
 ```
@@ -177,7 +177,7 @@ the same process for any Ecto Migration._
 
 Add `Incident` in the `application.ex`, adding into the application supervision tree:
 
-```
+```elixir
 defmodule AppName.Application do
   @moduledoc false
 
@@ -211,7 +211,7 @@ end
 
 In case of `InMemory` adapters that use `Agent` there is no need for any `Ecto` configuration so it is simply added`Incident` to the application supervision tree:
 
-```
+```elixir
 defmodule AppName.Application do
   @moduledoc false
 
