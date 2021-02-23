@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [0.6.1] - 2021-02-23
+
+### Fixed
+
+#### Library
+
+- Fix bug in the task `mix incident.postgres.init` that would generate migration timestamps that were conflicting with each other;
+
+### Changed
+
+#### Library
+
+- Update readme with missing syntax highlighting;
+- Update Github issue templates;
+- Update package dependencies;
+
 ## [0.6.0] - 2020-12-10
 
 ### Added
