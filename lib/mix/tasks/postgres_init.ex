@@ -45,7 +45,7 @@ defmodule Mix.Tasks.Incident.Postgres.Init do
     # Generates the aggregate_locks table migration
     name = "create_aggregate_locks_table"
     path = Path.relative_to(migrations_path(event_store_repo), Mix.Project.app_path())
-    file = Path.join(path, "#{timestamp()}_#{underscore(name)}.exs")
+    file = Path.join(path, "#{timestamp(1)}_#{underscore(name)}.exs")
 
     content =
       [module_name: Module.concat([event_store_repo, Migrations, camelize(name)])]
@@ -69,9 +69,11 @@ defmodule Mix.Tasks.Incident.Postgres.Init do
     """)
   end
 
-  @spec timestamp :: String.t()
-  defp timestamp do
-    {{y, m, d}, {hh, mm, ss}} = :calendar.universal_time()
+  @spec timestamp(non_neg_integer()) :: String.t()
+  defp timestamp(offset \\ 0) when offset >= 0 do
+    %DateTime{year: y, month: m, day: d, hour: hh, minute: mm, second: ss} =
+      DateTime.add(DateTime.utc_now(), offset, :second)
+
     "#{y}#{pad(m)}#{pad(d)}#{pad(hh)}#{pad(mm)}#{pad(ss)}"
   end
 
