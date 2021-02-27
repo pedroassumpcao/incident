@@ -21,7 +21,7 @@ defmodule Incident.ProjectionStore.InMemory.Adapter do
       update_in(state, [projection], fn projections ->
         case Enum.find(projections, &(&1.aggregate_id == aggregate_id)) do
           nil ->
-            [data] ++ projections
+            [struct(projection, data)] ++ projections
 
           _ ->
             Enum.reduce(projections, [], fn record, acc ->
