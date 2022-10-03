@@ -6,8 +6,8 @@ defmodule Incident.MixProject do
   def project do
     [
       app: :incident,
-      version: "0.6.1",
-      elixir: "~> 1.8",
+      version: "0.6.2",
+      elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -44,7 +44,7 @@ defmodule Incident.MixProject do
       {:credo, "~> 1.0", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:ecto, "~> 3.2"},
-      {:ecto_sql, "~> 3.2"},
+      {:ecto_sql, "~> 3.9"},
       {:ex_doc, "~> 0.21", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.11", only: :test},
       {:jason, "~> 1.0"},

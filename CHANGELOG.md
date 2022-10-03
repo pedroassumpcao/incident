@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [0.6.2] - 2022-10-03
+
+### Changed
+
+#### Library
+
+- Upgrade Elixir to 1.12 and Erlang to 23;
+- Update package dependencies;
+
 ## [0.6.1] - 2021-02-23
 
 ### Fixed
